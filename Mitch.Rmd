@@ -1,0 +1,41 @@
+---
+title: "Mitch"
+author: "Lewis"
+date: "13 July 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Trauma Team Activation Criteria as a predictor of severe trauma; an analysis of the sensitivity and specificity of Royal Darwin Hospital's Trauma Team Callout Criteria.**
+
+*Project Description*
+*Background*
+The activation of a dedicated trauma team is common practice in trauma centres to facilitate the immediate assessment and management of patients who have suffered potentially severe trauma.   Studies have shown that patients who have suffered severe trauma have improved outcomes when a multidisciplinary team are mobilised on patient arrival1,2.  Trauma team activation is associated with substantial use of hospital resources and therefore over triage of trauma patients results in loss of skilled hours which may compromise patient care in other areas of the hospital.  Trauma centres, therefore, must find a balance between the mobilisation of resources and the need for immediate resuscitation in severely injured patients to maintain an efficient but also safe trauma service.
+
+The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) include pre hospital (mechanism of injury) and clinical criteria for activation.  Mechanism of injury criteria have low predictive value for severe injury3-5 and may lead to a high rate of over-triage for RDH's trauma patients.
+
+```{r}
+## Set up the workspace
+setwd("C:/Users/lewis/Documents/CICM/CICM Formal Projects/Cameron M")
+library(tidyverse)
+library(lubridate)
+library(readxl)
+traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
+```
+Repeated calls to summary() and str() showed entry errors for disposition (ward, Ward, ward`), discharge status(alive, Alive), multi(no, No, yes, Yes), Height? (10, 2m, 3, 3.1, 3.5, 4, 4000, 5, 7) Air Comp (2 NAs), and still lots of columns where there are both unk or ? and NA.  
+
+```{r}
+Backgroundrate <- read_excel("DeidentNonop2015.xlsx", sheet = 1)
+summary(Backgroundrate$ApacheIIIROD)
+table(Backgroundrate$ICUVitalStatus)
+```
+The severity of the whole cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score (ANZROD) of \$summary(Backgroundrate$ApacheIIIROD)[3]\$ = 12.9%, mean 22.8%.  There are similar results for median ROD by APACHE II (24.8%), but different by SAPS II (12.8%).  Means are similar by APACHE II or SAPS II (30.8% and 23.3% respectively).  The sum of all probabilities of death divided by the total number of patients is 184.7385/815 (4 patients NA for APACHEIIIROD) which is 22.7%
+
+The actual deaths in ICU among those patients were 88 of 727 or 12.1%, giving SMR of 12.1/22.7=0.534, which as usual is very good.
+
+```{r}
+table(traumata$)
+```
