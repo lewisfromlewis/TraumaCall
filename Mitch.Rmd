@@ -34,7 +34,7 @@ traumata <- read_csv("traumata.csv")
 The severity of the whole cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score is given below.  The various risk functions give varying risks of death as summarised below, and the standardised mortality ratio across the year is from 0.42 to 0.53 (0.53 using APACHEIII).
 
 ```{r}
-## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
+## Next line is run once then replaced with the .csv file in the repo
 ## Backgroundrate <- read_excel("./Cameron M/DeidentNonop2015.xlsx", sheet = 1)
 Backgroundrate <- read_csv('Backgroundrate.csv')
 deathtable <- table(Backgroundrate$ICUVitalStatus)
@@ -42,7 +42,7 @@ deathrate <- (deathtable[2]/deathtable[1])
 deathpredictions <- Backgroundrate[,c(31, 33, 37)]
 summary(deathpredictions)
 predicteddeaths <- sapply(deathpredictions, sum, na.rm=T)
-deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(Deathpredictions)[1]
+deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(deathpredictions)[1]
 SMR <- deathrate/deathprobabilities
 print(SMR)
 ```
@@ -69,8 +69,6 @@ Secondly, all else is not equal.  People don't have a middling version of CPR, a
 
 Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time.  A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful.  Then we keep the important ones in and drop the rest one by one.
 ```{r}
-buildingmodels1 <- glm(`Major Trauma`=='yes' ~ CPR, family = "binomial", data = traumata)
-buildingmodels2 <- glm(`Major Trauma`=='yes' ~ `multi?` + CPR + `MVA ejection` + `MVA entrapment`, family = "binomial", data = traumata)
 ## Quick glance at the cell size for comparisons:
 str(sapply(traumata[,22:62], table))
 ## Excluded by this method (all but Neuro Def had cell counts 5 or fewer; neuro def was 6 but collinear with motor def): CPR + `Motor Loss` + `Sens Loss` + `Neuro Def` + Cyanosis + `RR<8` + `Amput Limb` + `CR<2s` + `HR<50` + `Inhal Burns` + `Blast Injury` + Drowning + `Crush head` + `Crush neck` + `Pen head` + `Bicycle vs car`
@@ -86,12 +84,12 @@ wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     `RR>30` + `SaO2<90` + 
                     `Resp distr` + Flail + `GCS ≤13` + Agitated + 
                     Seizure + `Sig Inj ≥2` , 
-                  family = "binomial", data = traumata, na.action=na.omit)
+                  family = "binomial", data = traumata)
 wholemodel
 drop1(wholemodel, test="Chisq")
 anova(wholemodel, test="Chisq")
 vif(wholemodel)
-lrtest(wholemodel, buildingmodels1)
+## lrtest once further models built
 ```
 
 ```{r}
