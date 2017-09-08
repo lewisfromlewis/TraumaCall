@@ -7,7 +7,7 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message=FALSE)
 ```
 
 **Trauma Team Activation Criteria as a predictor of severe trauma; an analysis of the sensitivity and specificity of Royal Darwin Hospital's Trauma Team Callout Criteria.**
@@ -21,8 +21,6 @@ Trauma team composition is not closely specified at a national or international 
 Our institution, Royal Darwin Hospital, is a remote hospital covering a large geographical area with a small population (ref).  There is a high incidence of severe trauma but long retrieval times are common (ref from Kath's work; if influential we could add a column of "injury time" and do a quick dirty analysis of that) and there is a high population burden of non traumatic illness which is both seasonally varying and unpredictably varying (ref).  The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) include pre hospital (mechanism of injury) and clinical criteria for activation.  Mechanism of injury criteria have low predictive value for severe injury3-5 and may lead to a high rate of over-triage for RDH's trauma patients.
 
 ```{r}
-## Set up the workspace
-setwd("C:/Users/lewis/Documents/CICM/CICM Formal Projects/Cameron M/TraumaCall")
 library(tidyverse)
 library(lubridate)
 library(readxl)
