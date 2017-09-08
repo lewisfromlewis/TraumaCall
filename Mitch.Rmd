@@ -26,6 +26,7 @@ library(tidyverse)
 library(lubridate)
 library(readxl)
 library(car)
+library(lmtest)
 ## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
 traumata <- read_csv("traumata.csv")
@@ -59,11 +60,24 @@ TCCpredictsdeath <- glm(traumata$`Discharge Status`=='Dead' ~ traumata$`Meets TC
 anova(TCCpredictsdeath, test="Chisq")
 ```
 *Values of Criteria*
+Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the log odds ratio for major trauma for 
+
+The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test.  The Likelihood is the probability of the data under a hypothesis.  In all of the calculations below that is the null hypothesis that the coefficient of the logistic 
+There are limitations to these comparisons.
 ```{r}
-buildingmodels <- glm(`Major Trauma`=='yes' ~ `multi?` + CPR + `MVA ejection` + `MVA entrapment`, family = "binomial", data = traumata)
-buildingmodels
-anova(buildingmodels, test="Chisq")
-vif(buildingmodels)
+buildingmodels1 <- glm(`Major Trauma`=='yes' ~ CPR, family = "binomial", data = traumata)
+buildingmodels2 <- glm(`Major Trauma`=='yes' ~ `multi?` + CPR + `MVA ejection` + `MVA entrapment`, family = "binomial", data = traumata)
+wholemodel <- glm(formula = `Major Trauma`=='yes' ~ CPR + `multi?` + 
+                    `MVA ejection` + `MVA entrapment` + 
+                    `MVA fatality at scene` + `Bicycle vs car` + 
+                    `Ped vs car` + `Pen head` + `Pen neck` + 
+                    `Pen torso` + `Crush head` + `Crush torso` + 
+                    `Burns >15%` + `Near Drown` + `Blast Injury`, 
+                  family = "binomial", data = traumata)
+wholemodel
+anova(wholemodel, test="Chisq")
+vif(wholemodel)
+lrtest(wholemodel, buildingmodels1)
 ```
 
 ```{r}
