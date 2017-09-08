@@ -71,6 +71,7 @@ Thirdly there are some obviously contributory ones that are excluded from the mo
 ## Quick glance at the cell size for comparisons:
 str(sapply(traumata[,22:62], table))
 ## Excluded by this method (all but Neuro Def had cell counts 5 or fewer; neuro def was 6 but collinear with motor def): CPR + `Motor Loss` + `Sens Loss` + `Neuro Def` + Cyanosis + `RR<8` + `Amput Limb` + `CR<2s` + `HR<50` + `Inhal Burns` + `Blast Injury` + Drowning + `Crush head` + `Crush neck` + `Pen head` + `Bicycle vs car`
+
 wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
                     `MVA ejection` + `MVA entrapment` + 
                     `MVA fatality at scene` + 
@@ -89,6 +90,26 @@ drop1(wholemodel, test="Chisq")
 anova(wholemodel, test="Chisq")
 vif(wholemodel)
 ## lrtest once further models built
+```
+
+The next models are tedious and painful but give some idea of the predictive contribution of parameters alone.
+```{r}
+## Only the commonest items are kept
+bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
+                    `MVA ejection` + `MVA entrapment` + 
+                    `MVA fatality at scene` + 
+                    `Ped vs car` + `Pen neck` + 
+                    `Pen torso` + 
+                    `Burns >15%` + `Near Drown` + 
+                    `Fall >3m` + `Air Comp` + Intubated + 
+                    `Sev fac inj` + 
+                    `HR>120` + `SBP<90` + `Pel Unstab` + 
+                    `RR>30` + `SaO2<90` + 
+                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    Seizure + `Sig Inj ≥2` , 
+                  family = "binomial", data = traumata)
+bulkmodel
+vif(bulkmodel)
 ```
 
 ```{r}
