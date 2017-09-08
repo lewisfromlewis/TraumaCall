@@ -2,7 +2,10 @@
 title: "Mitch"
 author: "Lewis"
 date: "13 July 2017"
-output: html_document
+output:
+  html_document:
+    keep_md: true
+
 ---
 
 ```{r setup, include=FALSE}
