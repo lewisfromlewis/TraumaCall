@@ -2,9 +2,7 @@
 title: "Mitch"
 author: "Lewis"
 date: "13 July 2017"
-output:
-  html_document:
-    keep_md: true
+output: github_document
 
 ---
 
