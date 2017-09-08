@@ -58,15 +58,10 @@ table(traumata$`Meets TCC`, traumata$`Discharge Status`)
 TCCpredictsdeath <- glm(traumata$`Discharge Status`=='Dead' ~ traumata$`Meets TCC`, family = "binomial")
 anova(TCCpredictsdeath, test="Chisq")
 ```
-*Values of Criteria*
-Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the log odds ratio for major trauma with each of the predictors, "all else being equal".
+**Contribution of Criteria**
+Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for major trauma with each of the predictors, "all else being equal".  So the odds ratio is their exponent to the base e.
 
-The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test.  The Likelihood is the probability of the data under a hypothesis.  In all of the calculations below that is the null hypothesis that the odds ratio is 1.
-There are limitations to these comparisons.  Firstly, every study like this is subject to sampling error even after excluding the sparse data and some of the fitted probabilities are 1 or 0: perfect prediction. These predictors are not used because they're not true.  It's particularly annoying that 240 observations are deleted due to missingness of one or more variable even after dropping the sparse cells.
 
-Secondly, all else is not equal.  People don't have a middling version of CPR, and the contribution of 2 long bone fractures in the presence of CPR is not independent, it's very much less important than in the absence of CPR.  Or more important, who knows?  The point is that all models have limitations imposed by the size of the dataset used in deriving the model.
-
-Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time.  A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful.  Then we keep the important ones in and drop the rest one by one.
 ```{r}
 ## Quick glance at the cell size for comparisons:
 str(sapply(traumata[,22:62], table))
@@ -92,7 +87,7 @@ vif(wholemodel)
 ## lrtest once further models built
 ```
 
-The next models are tedious and painful but give some idea of the predictive contribution of parameters alone.
+The next models are tedious and painful but give some idea of the predictive contribution of parameters alone.  In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*.  That may not be the case elsewhere, of course; but it is the case with the data we have.  The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive.  Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems.
 ```{r}
 ## Only the commonest items are kept
 bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
@@ -109,9 +104,39 @@ bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     Seizure + `Sig Inj ≥2` , 
                   family = "binomial", data = traumata)
 bulkmodel
+anova(bulkmodel, test="Chisq")
+drop1(bulkmodel)
 vif(bulkmodel)
+lrtest(wholemodel, bulkmodel)
 ```
+The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test.  The Likelihood is the probability of the data under a hypothesis.  In all of the calculations below that is the null hypothesis that the odds ratio is 1.
+There are limitations to these comparisons.  Firstly, every study like this is subject to sampling error even after excluding the sparse data and some of the fitted probabilities are 1 or 0: perfect prediction. These predictors are not used because they're not true.  It's particularly annoying that 240 observations are deleted due to missingness of one or more variable even after dropping the sparse cells.
 
+Secondly, all else is not equal.  People don't have a middling version of CPR, and the contribution of 2 long bone fractures in the presence of CPR is not independent, it's very much less important than in the absence of CPR.  Or more important, who knows?  The point is that all models have limitations imposed by the size of the dataset used in deriving the model.
+
+Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time.  A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful.  Then we keep the important ones in and drop the rest one by one.
+
+```{r}
+## Remove those with VIF>2:  `Sig Inj ≥2` + `Pel Unstab` + `Sev fac inj` +  Intubated + `Ped vs car`
+bulkmodelminimised <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
+                    `MVA ejection` + `MVA entrapment` + 
+                    `MVA fatality at scene` + 
+                    `Pen neck` + 
+                    `Pen torso` + 
+                    `Burns >15%` + `Near Drown` + 
+                    `Fall >3m` + `Air Comp` +
+                    `HR>120` + `SBP<90` +
+                    `RR>30` + `SaO2<90` + 
+                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    Seizure, 
+                  family = "binomial", data = traumata)
+bulkmodelminimised
+anova(bulkmodelminimised, test="Chisq")
+lrtest(bulkmodel, bulkmodelminimised)
+lrtest(wholemodel, bulkmodelminimised)
+vif(bulkmodelminimised)
+```
+Now with the minimised model a couple of expected things happen: the log likelihood is lower by 22.  This is a big difference.  So the p value is 4x10^-8.  Fair enough, the more elaborate model predicts outcomes more closely. But the Variance Inflation Factor has gone up only very slightly for all the remaining factors because the absolute difference between a likelihood of e^(-184) and a likelihood of e^(-162) is not very much, and there are fewer places for unmeasured variance to hide.  These are good things for a model.
 ```{r}
 #Close off data manipulations and save current databases
 write_csv(traumata, paste("traumata", "Sys.Date()",".csv"))
