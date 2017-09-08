@@ -60,21 +60,35 @@ TCCpredictsdeath <- glm(traumata$`Discharge Status`=='Dead' ~ traumata$`Meets TC
 anova(TCCpredictsdeath, test="Chisq")
 ```
 *Values of Criteria*
-Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the log odds ratio for major trauma for 
+Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the log odds ratio for major trauma with each of the predictors, "all else being equal".
 
-The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test.  The Likelihood is the probability of the data under a hypothesis.  In all of the calculations below that is the null hypothesis that the coefficient of the logistic 
-There are limitations to these comparisons.
+The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test.  The Likelihood is the probability of the data under a hypothesis.  In all of the calculations below that is the null hypothesis that the odds ratio is 1.
+There are limitations to these comparisons.  Firstly, every study like this is subject to sampling error even after excluding the sparse data and some of the fitted probabilities are 1 or 0: perfect prediction. These predictors are not used because they're not true.  It's particularly annoying that 240 observations are deleted due to missingness of one or more variable even after dropping the sparse cells.
+
+Secondly, all else is not equal.  People don't have a middling version of CPR, and the contribution of 2 long bone fractures in the presence of CPR is not independent, it's very much less important than in the absence of CPR.  Or more important, who knows?  The point is that all models have limitations imposed by the size of the dataset used in deriving the model.
+
+Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time.  A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful.  Then we keep the important ones in and drop the rest one by one.
 ```{r}
 buildingmodels1 <- glm(`Major Trauma`=='yes' ~ CPR, family = "binomial", data = traumata)
 buildingmodels2 <- glm(`Major Trauma`=='yes' ~ `multi?` + CPR + `MVA ejection` + `MVA entrapment`, family = "binomial", data = traumata)
-wholemodel <- glm(formula = `Major Trauma`=='yes' ~ CPR + `multi?` + 
+## Quick glance at the cell size for comparisons:
+str(sapply(traumata[,22:62], table))
+## Excluded by this method (all but Neuro Def had cell counts 5 or fewer; neuro def was 6 but collinear with motor def): CPR + `Motor Loss` + `Sens Loss` + `Neuro Def` + Cyanosis + `RR<8` + `Amput Limb` + `CR<2s` + `HR<50` + `Inhal Burns` + `Blast Injury` + Drowning + `Crush head` + `Crush neck` + `Pen head` + `Bicycle vs car`
+wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
                     `MVA ejection` + `MVA entrapment` + 
-                    `MVA fatality at scene` + `Bicycle vs car` + 
-                    `Ped vs car` + `Pen head` + `Pen neck` + 
-                    `Pen torso` + `Crush head` + `Crush torso` + 
-                    `Burns >15%` + `Near Drown` + `Blast Injury`, 
-                  family = "binomial", data = traumata)
+                    `MVA fatality at scene` + 
+                    `Ped vs car` + `Pen neck` + 
+                    `Pen torso` + `Crush torso` + 
+                    `Burns >15%` + `Near Drown` + 
+                    `Fall >3m` + `Air Comp` + Intubated + 
+                    `Sev fac inj` + 
+                    `HR>120` + `SBP<90` + `Pel Unstab` + 
+                    `RR>30` + `SaO2<90` + 
+                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    Seizure + `Sig Inj ≥2` , 
+                  family = "binomial", data = traumata, na.action=na.omit)
 wholemodel
+drop1(wholemodel, test="Chisq")
 anova(wholemodel, test="Chisq")
 vif(wholemodel)
 lrtest(wholemodel, buildingmodels1)
