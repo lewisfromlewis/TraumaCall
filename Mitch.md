@@ -12,91 +12,15 @@ Trauma team composition is not closely specified at a national or international 
 Our institution, Royal Darwin Hospital, is a remote hospital covering a large geographical area with a small population (ref). There is a high incidence of severe trauma but long retrieval times are common (ref from Kath's work; if influential we could add a column of "injury time" and do a quick dirty analysis of that) and there is a high population burden of non traumatic illness which is both seasonally varying and unpredictably varying (ref). The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) include pre hospital (mechanism of injury) and clinical criteria for activation. Mechanism of injury criteria have low predictive value for severe injury3-5 and may lead to a high rate of over-triage for RDH's trauma patients.
 
 ``` r
-## Set up the workspace
-setwd("C:/Users/lewis/Documents/CICM/CICM Formal Projects/Cameron M/TraumaCall")
 library(tidyverse)
-```
-
-    ## Loading tidyverse: ggplot2
-    ## Loading tidyverse: tibble
-    ## Loading tidyverse: tidyr
-    ## Loading tidyverse: readr
-    ## Loading tidyverse: purrr
-    ## Loading tidyverse: dplyr
-
-    ## Conflicts with tidy packages ----------------------------------------------
-
-    ## filter(): dplyr, stats
-    ## lag():    dplyr, stats
-
-``` r
 library(lubridate)
-```
-
-    ## 
-    ## Attaching package: 'lubridate'
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     date
-
-``` r
 library(readxl)
 library(car)
-```
-
-    ## 
-    ## Attaching package: 'car'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     recode
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     some
-
-``` r
 library(lmtest)
-```
-
-    ## Loading required package: zoo
-
-    ## 
-    ## Attaching package: 'zoo'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.Date, as.Date.numeric
-
-``` r
 ## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
 traumata <- read_csv("traumata.csv")
 ```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_character(),
-    ##   `Project ID` = col_double(),
-    ##   `ED Arrival Date` = col_datetime(format = ""),
-    ##   `Age (Years)` = col_integer(),
-    ##   `Triage Category` = col_integer(),
-    ##   Pulse = col_integer(),
-    ##   Resp = col_integer(),
-    ##   SBP = col_integer(),
-    ##   SaO2 = col_integer(),
-    ##   GCS = col_integer(),
-    ##   pulse = col_integer(),
-    ##   resp = col_integer(),
-    ##   sbp = col_integer(),
-    ##   SaO2__1 = col_integer(),
-    ##   GCS__1 = col_integer(),
-    ##   `Height?` = col_double(),
-    ##   ISS = col_integer()
-    ## )
-
-    ## See spec(...) for full column specifications.
 
 The severity of the whole cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score is given below. The various risk functions give varying risks of death as summarised below, and the standardised mortality ratio across the year is from 0.42 to 0.53 (0.53 using APACHEIII).
 
@@ -104,37 +28,6 @@ The severity of the whole cohort for that year is indicated by the median Risk o
 ## Next line is run once then replaced with the .csv file in the repo
 ## Backgroundrate <- read_excel("./Cameron M/DeidentNonop2015.xlsx", sheet = 1)
 Backgroundrate <- read_csv('Backgroundrate.csv')
-```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_character(),
-    ##   `Date of Birth` = col_datetime(format = ""),
-    ##   Age = col_integer(),
-    ##   HospAdmDateTime = col_datetime(format = ""),
-    ##   HospDisDateTime = col_datetime(format = ""),
-    ##   ICUAdmDateTime = col_datetime(format = ""),
-    ##   ICUDiscDateTime = col_datetime(format = ""),
-    ##   VentHours = col_double(),
-    ##   CVVH = col_double(),
-    ##   ICULOS = col_double(),
-    ##   SAPSIIScore = col_integer(),
-    ##   SAPSIIROD = col_double(),
-    ##   ApacheIIScore = col_integer(),
-    ##   ApacheIIROD = col_double(),
-    ##   Apache3Code = col_double(),
-    ##   ApacheIIIScore = col_integer(),
-    ##   ApacheIIIROD = col_double(),
-    ##   PrincipalICUDiagnosisCode = col_integer(),
-    ##   UnderlyingICUDiagnosisCode = col_integer(),
-    ##   PIM2Score = col_double(),
-    ##   PIM2ROD = col_double()
-    ##   # ... with 41 more columns
-    ## )
-
-    ## See spec(...) for full column specifications.
-
-``` r
 deathtable <- table(Backgroundrate$ICUVitalStatus)
 deathrate <- (deathtable[2]/deathtable[1])
 deathpredictions <- Backgroundrate[,c(31, 33, 37)]
@@ -375,11 +268,6 @@ wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     `Resp distr` + Flail + `GCS ≤13` + Agitated + 
                     Seizure + `Sig Inj ≥2` , 
                   family = "binomial", data = traumata)
-```
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-``` r
 wholemodel
 ```
 
@@ -428,54 +316,6 @@ wholemodel
 ``` r
 drop1(wholemodel, test="Chisq")
 ```
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-    ## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
 
     ## Single term deletions
     ## 
