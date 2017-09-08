@@ -25,6 +25,7 @@ setwd("C:/Users/lewis/Documents/CICM/CICM Formal Projects/Cameron M/TraumaCall")
 library(tidyverse)
 library(lubridate)
 library(readxl)
+library(car)
 ## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
 traumata <- read_csv("traumata.csv")
@@ -44,18 +45,27 @@ deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(Deathprediction
 SMR <- deathrate/deathprobabilities
 print(SMR)
 ```
-Traum acall criteria 
+Major trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value 2.2E-16).
 ```{r}
-table(traumata)
+table(traumata$`Meets TCC`, traumata$`Major Trauma`)
+TCCpredictsmajor <- glm(traumata$`Major Trauma`=='yes' ~ traumata$`Meets TCC`, family="binomial")
+anova(TCCpredictsmajor, test="Chisq")
 ```
 
-Trauma call criteria were more often seen in those who died, odds ratio 4.09, p=0.004 by Chi squared.
+Trauma call criteria were more often seen in those who died, odds ratio 4.09, p=0.004 by Chi squared.  For information, the background odds of death for those without a trauma call was 0.01 hence odds of death in those with a trauma call were still only 0.05.
 ```{r}
 table(traumata$`Meets TCC`, traumata$`Discharge Status`)
 TCCpredictsdeath <- glm(traumata$`Discharge Status`=='Dead' ~ traumata$`Meets TCC`, family = "binomial")
 anova(TCCpredictsdeath, test="Chisq")
 ```
-Trauma call criteria predicted 
+*Values of Criteria*
+```{r}
+buildingmodels <- glm(`Major Trauma`=='yes' ~ `multi?` + CPR + `MVA ejection` + `MVA entrapment`, family = "binomial", data = traumata)
+buildingmodels
+anova(buildingmodels, test="Chisq")
+vif(buildingmodels)
+```
+
 ```{r}
 #Close off data manipulations and save current databases
 write_csv(traumata, paste("traumata", "Sys.Date()",".csv"))
