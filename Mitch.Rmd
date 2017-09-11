@@ -64,30 +64,33 @@ Examining the informational contribution of trauma call criteria using multivari
 
 ```{r}
 ## Quick glance at the cell size for comparisons:
-str(sapply(traumata[,22:62], table))
+sparsity <- sapply(traumata[,22:62], table)
+str(sparsity)
 ## Excluded by this method (all but Neuro Def had cell counts 5 or fewer; neuro def was 6 but collinear with motor def): CPR + `Motor Loss` + `Sens Loss` + `Neuro Def` + Cyanosis + `RR<8` + `Amput Limb` + `CR<2s` + `HR<50` + `Inhal Burns` + `Blast Injury` + Drowning + `Crush head` + `Crush neck` + `Pen head` + `Bicycle vs car`
-
-wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
-                    `MVA ejection` + `MVA entrapment` + 
-                    `MVA fatality at scene` + 
-                    `Ped vs car` + `Pen neck` + 
-                    `Pen torso` + `Crush torso` + 
-                    `Burns >15%` + `Near Drown` + 
-                    `Fall >3m` + `Air Comp` + Intubated + 
-                    `Sev fac inj` + 
-                    `HR>120` + `SBP<90` + `Pel Unstab` + 
-                    `RR>30` + `SaO2<90` + 
-                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
-                    Seizure + `Sig Inj ≥2` , 
-                  family = "binomial", data = traumata)
+TCClist <- as.data.frame(traumata[,c(8,9, 22:30, 32, 33, 35:37, 39:62)])
+wholemodel <- glm(formula = `Major Trauma`=='yes' ~ .,
+                  family = "binomial", data = TCClist)
+# I can't bring myself to delete this after typing the fucker in: wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + `MVA ejection` + `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCS ≤13` + Agitated + Seizure + `Sig Inj ≥2` , family = "binomial", data = traumata)
 wholemodel
-drop1(wholemodel, test="Chisq")
-anova(wholemodel, test="Chisq")
+```
+Some model diagnostic, as follow, show this is a slightly flaky model.  Have I missed any of the trauma call criteria?  There are a lot even just in this list.  Drop1 reanalyses the model after dropping each one in order. Analysis of variance is the general term for analysing the contribution of each predictor to the total variability in the response.
+
+The inverse model is the one excluding those predictors with most evidence for association based on the F test.  Finally, the reduced dataset of only complete cases has to be used for the likelihood ratio test of goodness of model fit, because of the assumption that one model is "nested" in the other.  Doing all this, which is quite standard, the inverse model performs almost exactly as well as the full bhoona.  This suggests that most of the trauma call criteria are correlated with one another and that at least most of them are redundant, given the rest.  At the bottom are the most tedious of all, which I really need a willing slave to do: the one by one correlations of each commonly occurring criterion with the others, stratified by Major Trauma definitions.
+```{r}
+drop1(wholemodel, test="LR")
+Anova(wholemodel, test="F")
 vif(wholemodel)
-## lrtest once further models built
+
+inversemodel <- update(wholemodel, drop.terms(wholemodel$terms, c(3, 10, 12, 13, 18, 19, 21, 22, 25)))
+#Generate the list of complete cases among the trauma call criteria, redo both models
+traumacompletecrit <- TCClist[complete.cases(TCClist),]
+wholemodelcomplete <- glm(formula = `Major Trauma`=='yes' ~ .,
+                  family = "binomial", data = traumacompletecrit)
+inversemodelcomplete <- update(wholemodelcomplete, drop.terms(wholemodelcomplete$terms, c(3, 10, 12, 13, 18, 19, 21, 22, 25)))
+lrtest(wholemodelcomplete, inversemodelcomplete)
 ```
 
-The next models are tedious and painful but give some idea of the predictive contribution of parameters alone.  In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*.  That may not be the case elsewhere, of course; but it is the case with the data we have.  The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive.  Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems.
+The next models are tedious and painful but give some idea of the predictive contribution of parameters alone.  In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*.  That may not be the case elsewhere, of course; but it is the case with the data we have.  The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive.  Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems, then check the coefficients of inversemodel, in which all of the significant predictors from wholemodel have been removed.  Agitation, for example, had OR e^(0.32)=1.38, when it's doing more of the heavy lifting that was previously taken by hypoxia or tachypnoea it carries OR e^(1.87)=6.46.
 ```{r}
 ## Only the commonest items are kept
 bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
@@ -104,7 +107,7 @@ bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     Seizure + `Sig Inj ≥2` , 
                   family = "binomial", data = traumata)
 bulkmodel
-anova(bulkmodel, test="Chisq")
+Anova(bulkmodel, test="LR")
 drop1(bulkmodel)
 vif(bulkmodel)
 lrtest(wholemodel, bulkmodel)

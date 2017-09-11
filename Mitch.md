@@ -115,17 +115,12 @@ anova(TCCpredictsdeath, test="Chisq")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-*Values of Criteria* Examining the informational contribution of trauma call criteria using multivariable logistic regression. Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5. Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true. In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the log odds ratio for major trauma with each of the predictors, "all else being equal".
-
-The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test. The Likelihood is the probability of the data under a hypothesis. In all of the calculations below that is the null hypothesis that the odds ratio is 1. There are limitations to these comparisons. Firstly, every study like this is subject to sampling error even after excluding the sparse data and some of the fitted probabilities are 1 or 0: perfect prediction. These predictors are not used because they're not true. It's particularly annoying that 240 observations are deleted due to missingness of one or more variable even after dropping the sparse cells.
-
-Secondly, all else is not equal. People don't have a middling version of CPR, and the contribution of 2 long bone fractures in the presence of CPR is not independent, it's very much less important than in the absence of CPR. Or more important, who knows? The point is that all models have limitations imposed by the size of the dataset used in deriving the model.
-
-Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time. A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful. Then we keep the important ones in and drop the rest one by one.
+**Contribution of Criteria** Examining the informational contribution of trauma call criteria using multivariable logistic regression. Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5. Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true. In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for major trauma with each of the predictors, "all else being equal". So the odds ratio is their exponent to the base e.
 
 ``` r
 ## Quick glance at the cell size for comparisons:
-str(sapply(traumata[,22:62], table))
+sparsity <- sapply(traumata[,22:62], table)
+str(sparsity)
 ```
 
     ## List of 41
@@ -255,6 +250,7 @@ str(sapply(traumata[,22:62], table))
 
 ``` r
 ## Excluded by this method (all but Neuro Def had cell counts 5 or fewer; neuro def was 6 but collinear with motor def): CPR + `Motor Loss` + `Sens Loss` + `Neuro Def` + Cyanosis + `RR<8` + `Amput Limb` + `CR<2s` + `HR<50` + `Inhal Burns` + `Blast Injury` + Drowning + `Crush head` + `Crush neck` + `Pen head` + `Bicycle vs car`
+
 wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
                     `MVA ejection` + `MVA entrapment` + 
                     `MVA fatality at scene` + 
@@ -313,8 +309,12 @@ wholemodel
     ## Null Deviance:       528 
     ## Residual Deviance: 324   AIC: 376
 
+Some model diagnostic, as follow, show this is a slightly flaky model. Have I missed any of the trauma call criteria? There are a lot even just in this list. Drop1 reanalyses the model after dropping each one in order. Analysis of variance is the general term for analysing the contribution of each predictor to the total variability in the response.
+
+The inverse model is the one excluding those predictors with most evidence for association based on the F test. Finally, the reduced dataset of only complete cases has to be used for the likelihood ratio test of goodness of model fit, because of the assumption that one model is "nested" in the other.
+
 ``` r
-drop1(wholemodel, test="Chisq")
+drop1(wholemodel, test="LR")
 ```
 
     ## Single term deletions
@@ -357,45 +357,41 @@ drop1(wholemodel, test="Chisq")
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-anova(wholemodel, test="Chisq")
+Anova(wholemodel, test="F")
 ```
 
-    ## Analysis of Deviance Table
-    ## 
-    ## Model: binomial, link: logit
+    ## Analysis of Deviance Table (Type II tests)
     ## 
     ## Response: `Major Trauma` == "yes"
+    ## Error estimate based on Pearson residuals 
     ## 
-    ## Terms added sequentially (first to last)
-    ## 
-    ## 
-    ##                         Df Deviance Resid. Df Resid. Dev  Pr(>Chi)    
-    ## NULL                                      543     527.97              
-    ## `multi?`                 1    0.934       542     527.03 0.3337640    
-    ## `MVA ejection`           1    3.329       541     523.70 0.0680647 .  
-    ## `MVA entrapment`         1    6.916       540     516.79 0.0085434 ** 
-    ## `MVA fatality at scene`  1    0.004       539     516.78 0.9476930    
-    ## `Ped vs car`             1    1.738       538     515.04 0.1874258    
-    ## `Pen neck`               1    0.660       537     514.38 0.4164440    
-    ## `Pen torso`              1    1.223       536     513.16 0.2688430    
-    ## `Crush torso`            1    1.231       535     511.93 0.2671758    
-    ## `Burns >15%`             1    0.006       534     511.92 0.9371023    
-    ## `Near Drown`             1    6.773       533     505.15 0.0092555 ** 
-    ## `Fall >3m`               1    1.172       532     503.98 0.2790913    
-    ## `Air Comp`               1   23.569       531     480.41 1.205e-06 ***
-    ## Intubated                1   63.440       530     416.97 1.653e-15 ***
-    ## `Sev fac inj`            1    1.503       529     415.47 0.2201394    
-    ## `HR>120`                 1    1.856       528     413.61 0.1731421    
-    ## `SBP<90`                 1    2.274       527     411.34 0.1315556    
-    ## `Pel Unstab`             1    1.847       526     409.49 0.1741508    
-    ## `RR>30`                  1   10.282       525     399.21 0.0013432 ** 
-    ## `SaO2<90`                1   11.403       524     387.80 0.0007331 ***
-    ## `Resp distr`             1    0.105       523     387.70 0.7455072    
-    ## Flail                    1   18.884       522     368.81 1.389e-05 ***
-    ## `GCS =13`                1   27.811       521     341.00 1.338e-07 ***
-    ## Agitated                 1    0.239       520     340.76 0.6245990    
-    ## Seizure                  1    0.475       519     340.29 0.4908463    
-    ## `Sig Inj =2`             1   16.289       518     324.00 5.437e-05 ***
+    ##                             SS  Df       F    Pr(>F)    
+    ## `multi?`                  1.84   1  1.9486 0.1633322    
+    ## `MVA ejection`            0.59   1  0.6266 0.4289821    
+    ## `MVA entrapment`          1.47   1  1.5547 0.2130103    
+    ## `MVA fatality at scene`   0.40   1  0.4199 0.5172850    
+    ## `Ped vs car`              2.32   1  2.4610 0.1173147    
+    ## `Pen neck`                0.00   1  0.0000 0.9974288    
+    ## `Pen torso`               0.12   1  0.1278 0.7208807    
+    ## `Crush torso`             0.53   1  0.5570 0.4558031    
+    ## `Burns >15%`              0.58   1  0.6119 0.4344359    
+    ## `Near Drown`              1.55   1  1.6490 0.1996654    
+    ## `Fall >3m`                0.06   1  0.0611 0.8048514    
+    ## `Air Comp`                0.06   1  0.0636 0.8010630    
+    ## Intubated                24.20   1 25.6716 5.640e-07 ***
+    ## `Sev fac inj`             0.18   1  0.1863 0.6661932    
+    ## `HR>120`                  0.00   1  0.0014 0.9696461    
+    ## `SBP<90`                  0.40   1  0.4261 0.5142076    
+    ## `Pel Unstab`              0.18   1  0.1863 0.6661931    
+    ## `RR>30`                   0.08   1  0.0892 0.7653499    
+    ## `SaO2<90`                13.45   1 14.2666 0.0001771 ***
+    ## `Resp distr`              1.17   1  1.2397 0.2660461    
+    ## Flail                    14.08   1 14.9387 0.0001252 ***
+    ## `GCS =13`                27.83   1 29.5257 8.506e-08 ***
+    ## Agitated                  0.11   1  0.1151 0.7345167    
+    ## Seizure                   0.54   1  0.5711 0.4501702    
+    ## `Sig Inj =2`             16.29   1 17.2823 3.770e-05 ***
+    ## Residuals               488.24 518                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -423,8 +419,351 @@ vif(wholemodel)
     ##                2.492588
 
 ``` r
-## lrtest once further models built
+inversemodel <- update(wholemodel, drop.terms(wholemodel$terms, c(3, 10, 12, 13, 18, 19, 21, 22, 25)))
+## lrtest once further models built.  This will need a new data frame containing only complete cases.
 ```
+
+The next models are tedious and painful but give some idea of the predictive contribution of parameters alone. In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*. That may not be the case elsewhere, of course; but it is the case with the data we have. The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive. Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems, then check the coefficients of inversemodel, in which all of the significant predictors from wholemodel have been removed. Agitation, for example, had OR e^(0.32)=1.38, when it's doing more of the heavy lifting that was previously taken by hypoxia or tachypnoea it carries OR e^(1.87)=6.46.
+
+``` r
+## Only the commonest items are kept
+bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
+                    `MVA ejection` + `MVA entrapment` + 
+                    `MVA fatality at scene` + 
+                    `Ped vs car` + `Pen neck` + 
+                    `Pen torso` + 
+                    `Burns >15%` + `Near Drown` + 
+                    `Fall >3m` + `Air Comp` + Intubated + 
+                    `Sev fac inj` + 
+                    `HR>120` + `SBP<90` + `Pel Unstab` + 
+                    `RR>30` + `SaO2<90` + 
+                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    Seizure + `Sig Inj ≥2` , 
+                  family = "binomial", data = traumata)
+bulkmodel
+```
+
+    ## 
+    ## Call:  glm(formula = `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + 
+    ##     `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + 
+    ##     `Pen neck` + `Pen torso` + `Burns >15%` + `Near Drown` + 
+    ##     `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + 
+    ##     `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + 
+    ##     Flail + `GCS =13` + Agitated + Seizure + `Sig Inj =2`, family = "binomial", 
+    ##     data = traumata)
+    ## 
+    ## Coefficients:
+    ##                (Intercept)                 `multi?`Yes  
+    ##                  -2.397302                   -0.811207  
+    ##          `MVA ejection`yes         `MVA entrapment`yes  
+    ##                   0.554518                    1.212784  
+    ## `MVA fatality at scene`yes             `Ped vs car`yes  
+    ##                   0.603020                  -16.108139  
+    ##              `Pen neck`yes              `Pen torso`yes  
+    ##                   0.009536                    0.186748  
+    ##            `Burns >15%`yes             `Near Drown`yes  
+    ##                   0.965861                   20.492644  
+    ##              `Fall >3m`yes               `Air Comp`yes  
+    ##                   0.191498                   -0.299531  
+    ##               Intubatedyes            `Sev fac inj`yes  
+    ##                  46.902176                  -14.115575  
+    ##                `HR>120`yes                 `SBP<90`yes  
+    ##                  -0.016595                   -0.687444  
+    ##            `Pel Unstab`yes                  `RR>30`yes  
+    ##                 -14.452691                    0.231253  
+    ##               `SaO2<90`yes             `Resp distr`yes  
+    ##                   3.341452                   -2.075477  
+    ##                   Flailyes                `GCS =13`yes  
+    ##                  22.807772                    2.114653  
+    ##                Agitatedyes                  Seizureyes  
+    ##                   0.322882                   -0.683620  
+    ##            `Sig Inj =2`yes  
+    ##                  50.422978  
+    ## 
+    ## Degrees of Freedom: 543 Total (i.e. Null);  519 Residual
+    ##   (240 observations deleted due to missingness)
+    ## Null Deviance:       528 
+    ## Residual Deviance: 324.5     AIC: 374.5
+
+``` r
+Anova(bulkmodel, test="LR")
+```
+
+    ## Analysis of Deviance Table (Type II tests)
+    ## 
+    ## Response: `Major Trauma` == "yes"
+    ##                         LR Chisq Df Pr(>Chisq)    
+    ## `multi?`                  1.8134  1  0.1781034    
+    ## `MVA ejection`            0.6073  1  0.4358119    
+    ## `MVA entrapment`          1.4811  1  0.2236028    
+    ## `MVA fatality at scene`   0.4019  1  0.5260891    
+    ## `Ped vs car`              2.2974  1  0.1295929    
+    ## `Pen neck`                0.0001  1  0.9929710    
+    ## `Pen torso`               0.1307  1  0.7177111    
+    ## `Burns >15%`              0.5868  1  0.4436763    
+    ## `Near Drown`              1.5604  1  0.2116039    
+    ## `Fall >3m`                0.0629  1  0.8020100    
+    ## `Air Comp`                0.0588  1  0.8083727    
+    ## Intubated                24.1924  1  8.717e-07 ***
+    ## `Sev fac inj`             0.1738  1  0.6767292    
+    ## `HR>120`                  0.0009  1  0.9754454    
+    ## `SBP<90`                  0.3994  1  0.5273883    
+    ## `Pel Unstab`              0.1738  1  0.6767291    
+    ## `RR>30`                   0.0859  1  0.7695154    
+    ## `SaO2<90`                13.4945  1  0.0002393 ***
+    ## `Resp distr`              1.1766  1  0.2780455    
+    ## Flail                    14.1231  1  0.0001712 ***
+    ## `GCS =13`                28.0149  1  1.204e-07 ***
+    ## Agitated                  0.1095  1  0.7406976    
+    ## Seizure                   0.5346  1  0.4646925    
+    ## `Sig Inj =2`             16.2731  1  5.484e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+drop1(bulkmodel)
+```
+
+    ## Single term deletions
+    ## 
+    ## Model:
+    ## `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + 
+    ##     `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + 
+    ##     `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + 
+    ##     `SaO2<90` + `Resp distr` + Flail + `GCS =13` + Agitated + 
+    ##     Seizure + `Sig Inj =2`
+    ##                         Df Deviance    AIC
+    ## <none>                       324.53 374.53
+    ## `multi?`                 1   326.34 374.34
+    ## `MVA ejection`           1   325.13 373.13
+    ## `MVA entrapment`         1   326.01 374.01
+    ## `MVA fatality at scene`  1   324.93 372.93
+    ## `Ped vs car`             1   326.82 374.82
+    ## `Pen neck`               1   324.53 372.53
+    ## `Pen torso`              1   324.66 372.66
+    ## `Burns >15%`             1   325.11 373.11
+    ## `Near Drown`             1   326.09 374.09
+    ## `Fall >3m`               1   324.59 372.59
+    ## `Air Comp`               1   324.58 372.58
+    ## Intubated                1   348.72 396.72
+    ## `Sev fac inj`            1   324.70 372.70
+    ## `HR>120`                 1   324.53 372.53
+    ## `SBP<90`                 1   324.92 372.92
+    ## `Pel Unstab`             1   324.70 372.70
+    ## `RR>30`                  1   324.61 372.61
+    ## `SaO2<90`                1   338.02 386.02
+    ## `Resp distr`             1   325.70 373.70
+    ## Flail                    1   338.65 386.65
+    ## `GCS =13`                1   352.54 400.54
+    ## Agitated                 1   324.63 372.63
+    ## Seizure                  1   325.06 373.06
+    ## `Sig Inj =2`             1   340.80 388.80
+
+``` r
+vif(bulkmodel)
+```
+
+    ##                `multi?`          `MVA ejection`        `MVA entrapment` 
+    ##                1.195985                1.093123                1.427094 
+    ## `MVA fatality at scene`            `Ped vs car`              `Pen neck` 
+    ##                1.163704                2.071997                1.041491 
+    ##             `Pen torso`            `Burns >15%`            `Near Drown` 
+    ##                1.145853                1.037077                1.000000 
+    ##              `Fall >3m`              `Air Comp`               Intubated 
+    ##                1.053305                1.071366                2.858182 
+    ##           `Sev fac inj`                `HR>120`                `SBP<90` 
+    ##                2.203613                1.122027                1.050390 
+    ##            `Pel Unstab`                 `RR>30`               `SaO2<90` 
+    ##                2.075290                1.089769                1.482869 
+    ##            `Resp distr`                   Flail               `GCS =13` 
+    ##                1.880336                1.000000                1.218935 
+    ##                Agitated                 Seizure            `Sig Inj =2` 
+    ##                1.095107                1.152005                2.492718
+
+``` r
+lrtest(wholemodel, bulkmodel)
+```
+
+    ## Likelihood ratio test
+    ## 
+    ## Model 1: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + 
+    ##     `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + 
+    ##     `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + 
+    ##     `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + 
+    ##     `GCS =13` + Agitated + Seizure + `Sig Inj =2`
+    ## Model 2: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + 
+    ##     `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + 
+    ##     `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + 
+    ##     `SaO2<90` + `Resp distr` + Flail + `GCS =13` + Agitated + 
+    ##     Seizure + `Sig Inj =2`
+    ##   #Df  LogLik Df Chisq Pr(>Chisq)
+    ## 1  26 -162.00                    
+    ## 2  25 -162.26 -1 0.525     0.4687
+
+The performance of the models in predicting the outcome "Major Trauma" is compared using the likelihood ratio test. The Likelihood is the probability of the data under a hypothesis. In all of the calculations below that is the null hypothesis that the odds ratio is 1. There are limitations to these comparisons. Firstly, every study like this is subject to sampling error even after excluding the sparse data and some of the fitted probabilities are 1 or 0: perfect prediction. These predictors are not used because they're not true. It's particularly annoying that 240 observations are deleted due to missingness of one or more variable even after dropping the sparse cells.
+
+Secondly, all else is not equal. People don't have a middling version of CPR, and the contribution of 2 long bone fractures in the presence of CPR is not independent, it's very much less important than in the absence of CPR. Or more important, who knows? The point is that all models have limitations imposed by the size of the dataset used in deriving the model.
+
+Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time. A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful. Then we keep the important ones in and drop the rest one by one.
+
+``` r
+## Remove those with VIF>2:  `Sig Inj ≥2` + `Pel Unstab` + `Sev fac inj` +  Intubated + `Ped vs car`
+bulkmodelminimised <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
+                    `MVA ejection` + `MVA entrapment` + 
+                    `MVA fatality at scene` + 
+                    `Pen neck` + 
+                    `Pen torso` + 
+                    `Burns >15%` + `Near Drown` + 
+                    `Fall >3m` + `Air Comp` +
+                    `HR>120` + `SBP<90` +
+                    `RR>30` + `SaO2<90` + 
+                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    Seizure, 
+                  family = "binomial", data = traumata)
+bulkmodelminimised
+```
+
+    ## 
+    ## Call:  glm(formula = `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + 
+    ##     `MVA entrapment` + `MVA fatality at scene` + `Pen neck` + 
+    ##     `Pen torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + 
+    ##     `Air Comp` + `HR>120` + `SBP<90` + `RR>30` + `SaO2<90` + 
+    ##     `Resp distr` + Flail + `GCS =13` + Agitated + Seizure, family = "binomial", 
+    ##     data = traumata)
+    ## 
+    ## Coefficients:
+    ##                (Intercept)                 `multi?`Yes  
+    ##                  -2.364891                   -0.740776  
+    ##          `MVA ejection`yes         `MVA entrapment`yes  
+    ##                   0.581043                    1.760339  
+    ## `MVA fatality at scene`yes               `Pen neck`yes  
+    ##                   0.399738                    0.068319  
+    ##             `Pen torso`yes             `Burns >15%`yes  
+    ##                  -0.001567                    0.797563  
+    ##            `Near Drown`yes               `Fall >3m`yes  
+    ##                  16.238189                    0.048544  
+    ##              `Air Comp`yes                 `HR>120`yes  
+    ##                   1.435532                   -0.029468  
+    ##                `SBP<90`yes                  `RR>30`yes  
+    ##                   0.593704                    0.794847  
+    ##               `SaO2<90`yes             `Resp distr`yes  
+    ##                   3.566357                   -2.802702  
+    ##                   Flailyes                `GCS =13`yes  
+    ##                  19.078332                    2.368810  
+    ##                Agitatedyes                  Seizureyes  
+    ##                   1.074463                   -1.006202  
+    ## 
+    ## Degrees of Freedom: 543 Total (i.e. Null);  524 Residual
+    ##   (240 observations deleted due to missingness)
+    ## Null Deviance:       528 
+    ## Residual Deviance: 369   AIC: 409
+
+``` r
+anova(bulkmodelminimised, test="Chisq")
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model: binomial, link: logit
+    ## 
+    ## Response: `Major Trauma` == "yes"
+    ## 
+    ## Terms added sequentially (first to last)
+    ## 
+    ## 
+    ##                         Df Deviance Resid. Df Resid. Dev  Pr(>Chi)    
+    ## NULL                                      543     527.97              
+    ## `multi?`                 1    0.934       542     527.03 0.3337640    
+    ## `MVA ejection`           1    3.329       541     523.70 0.0680647 .  
+    ## `MVA entrapment`         1    6.916       540     516.79 0.0085434 ** 
+    ## `MVA fatality at scene`  1    0.004       539     516.78 0.9476930    
+    ## `Pen neck`               1    0.730       538     516.05 0.3927427    
+    ## `Pen torso`              1    1.427       537     514.62 0.2323013    
+    ## `Burns >15%`             1    0.003       536     514.62 0.9562712    
+    ## `Near Drown`             1    6.680       535     507.94 0.0097520 ** 
+    ## `Fall >3m`               1    1.043       534     506.90 0.3071057    
+    ## `Air Comp`               1   25.142       533     481.76 5.326e-07 ***
+    ## `HR>120`                 1    2.344       532     479.41 0.1257928    
+    ## `SBP<90`                 1    5.836       531     473.58 0.0156989 *  
+    ## `RR>30`                  1   15.096       530     458.48 0.0001022 ***
+    ## `SaO2<90`                1   16.414       529     442.07 5.091e-05 ***
+    ## `Resp distr`             1    0.194       528     441.87 0.6595180    
+    ## Flail                    1   15.587       527     426.29 7.880e-05 ***
+    ## `GCS =13`                1   54.437       526     371.85 1.605e-13 ***
+    ## Agitated                 1    1.462       525     370.39 0.2265428    
+    ## Seizure                  1    1.400       524     368.99 0.2367844    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+lrtest(bulkmodel, bulkmodelminimised)
+```
+
+    ## Likelihood ratio test
+    ## 
+    ## Model 1: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + 
+    ##     `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + 
+    ##     `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + 
+    ##     `SaO2<90` + `Resp distr` + Flail + `GCS =13` + Agitated + 
+    ##     Seizure + `Sig Inj =2`
+    ## Model 2: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Pen neck` + `Pen torso` + `Burns >15%` + 
+    ##     `Near Drown` + `Fall >3m` + `Air Comp` + `HR>120` + `SBP<90` + 
+    ##     `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCS =13` + 
+    ##     Agitated + Seizure
+    ##   #Df  LogLik Df  Chisq Pr(>Chisq)    
+    ## 1  25 -162.26                         
+    ## 2  20 -184.49 -5 44.462  1.867e-08 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+lrtest(wholemodel, bulkmodelminimised)
+```
+
+    ## Likelihood ratio test
+    ## 
+    ## Model 1: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + 
+    ##     `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + 
+    ##     `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + 
+    ##     `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + 
+    ##     `GCS =13` + Agitated + Seizure + `Sig Inj =2`
+    ## Model 2: `Major Trauma` == "yes" ~ `multi?` + `MVA ejection` + `MVA entrapment` + 
+    ##     `MVA fatality at scene` + `Pen neck` + `Pen torso` + `Burns >15%` + 
+    ##     `Near Drown` + `Fall >3m` + `Air Comp` + `HR>120` + `SBP<90` + 
+    ##     `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCS =13` + 
+    ##     Agitated + Seizure
+    ##   #Df  LogLik Df  Chisq Pr(>Chisq)    
+    ## 1  26 -162.00                         
+    ## 2  20 -184.49 -6 44.986  4.709e-08 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+vif(bulkmodelminimised)
+```
+
+    ##                `multi?`          `MVA ejection`        `MVA entrapment` 
+    ##                1.226004                1.104676                1.368707 
+    ## `MVA fatality at scene`              `Pen neck`             `Pen torso` 
+    ##                1.158801                1.040262                1.122155 
+    ##            `Burns >15%`            `Near Drown`              `Fall >3m` 
+    ##                1.036571                1.000002                1.032397 
+    ##              `Air Comp`                `HR>120`                `SBP<90` 
+    ##                1.064476                1.147697                1.044163 
+    ##                 `RR>30`               `SaO2<90`            `Resp distr` 
+    ##                1.125571                1.458660                1.743918 
+    ##                   Flail               `GCS =13`                Agitated 
+    ##                1.000004                1.200472                1.134829 
+    ##                 Seizure 
+    ##                1.187744
+
+Now with the minimised model a couple of expected things happen: the log likelihood is lower by 22. This is a big difference. So the p value is 4x10^-8. Fair enough, the more elaborate model predicts outcomes more closely. But the Variance Inflation Factor has gone up only very slightly for all the remaining factors because the absolute difference between a likelihood of e^(-184) and a likelihood of e^(-162) is not very much, and there are fewer places for unmeasured variance to hide. These are good things for a model.
 
 ``` r
 #Close off data manipulations and save current databases
