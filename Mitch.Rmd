@@ -26,7 +26,6 @@ The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) is a li
 
 ```{r}
 library(tidyverse)
-library(lubridate)
 library(readxl)
 library(car)
 library(lmtest)
@@ -36,7 +35,7 @@ traumata <- read_csv("traumata.csv")
 ```
 ***Methods***
 **Population**
-A list of all patients presenting to RDH ED in the calendar year of 2015 formed the sample frame.  By linkage with the Trauma Registry, ICU Registry, administrative data on mortality and Operating Theatre records we identified 784 patients who had apparently been screened for severe trauma, or experienced a severe trauma event, out of XX total patients presenting to the Emergency Department.  One decision we faced in this evaluation was the choice of the denominator population.  The diagnostic contingency table (table) will generate higher values for negative predictive value and specificity as the proportion of patients screened in addition to those with severe trauma.
+A list of all patients presenting to RDH ED in the calendar year of 2015 formed the sample frame.  By linkage with the Trauma Registry, ICU Registry, administrative data on mortality and Operating Theatre records we identified 428 patients who had activated a Trauma Call, out of 1712 trauma patients presenting to the Emergency Department and screened using the TTCC.  A further 29 patients were confirmed as Severe Trauma but did not meet the TTCC, of whom 14 also did not meet the second tier criteria (CONSORT table). One decision we faced in this evaluation was the choice of the denominator population.  The diagnostic contingency table (table) will generate higher values for negative predictive value and specificity as the proportion of patients screened in addition to those with severe trauma.
 
 ***Results***
 **Population**
@@ -59,8 +58,12 @@ print(SMR)
 Major trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value 2.2E-16).
 ```{r}
 table(traumata$`Meets TCC`, traumata$`Major Trauma`)
+# screened <- cbind(c(1094, 293), c(29, 135))
+# screenedlong <- cbind(c(traumata$`Meets TCC`, rep("no", 1094-327)), c(traumata$`Major Trauma`, rep("no", 1094-293)))
+# screenglm <- glm(screened[1], screened[2])
 TCCpredictsmajor <- glm(traumata$`Major Trauma`=='yes' ~ traumata$`Meets TCC`, family="binomial")
 anova(TCCpredictsmajor, test="Chisq")
+# chisq.test(screened)
 ```
 
 Trauma call criteria were more often seen in those who died, odds ratio 4.09, p=0.004 by Chi squared.  For information, the background odds of death for those without a trauma call was 0.01 hence odds of death in those with a trauma call were still only 0.05.
@@ -81,7 +84,7 @@ sparsity
 TCClist <- as.data.frame(traumata[,c(8,9, 22:30, 32, 33, 35:37, 39:62)])
 wholemodel <- glm(formula = `Major Trauma`=='yes' ~ .,
                   family = "binomial", data = TCClist)
-# I can't bring myself to delete this after typing the fucker in: wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + `MVA ejection` + `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCS ≤13` + Agitated + Seizure + `Sig Inj ≥2` , family = "binomial", data = traumata)
+# I can't bring myself to delete this after typing the fucker in: wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + `MVA ejection` + `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCSunder13` + Agitated + Seizure + `Sig Inj ≥2` , family = "binomial", data = traumata)
 wholemodel
 ```
 Some model diagnostic, as follow, show this is a slightly flaky model.  Have I missed any of the trauma call criteria?  There are a lot even just in this list.  Drop1 reanalyses the model after dropping each one in order. Analysis of variance is the general term for analysing the contribution of each predictor to the total variability in the response.
@@ -91,6 +94,8 @@ The inverse model is the one excluding those predictors with most evidence for a
 drop1(wholemodel, test="LR")
 Anova(wholemodel, test="F")
 vif(wholemodel)
+
+
 
 inversemodel <- update(wholemodel, drop.terms(wholemodel$terms, c(3, 10, 12, 13, 18, 19, 21, 22, 25)))
 #Generate the list of complete cases among the trauma call criteria, redo both models
@@ -102,7 +107,7 @@ lrtest(wholemodelcomplete, inversemodelcomplete)
 
 mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$Flail, traumata$`SaO2<90`)
-mantelhaen.test(traumata$`Major Trauma`, traumata$`GCS ≤13`, traumata$`SaO2<90`)
+mantelhaen.test(traumata$`Major Trauma`, traumata$`GCSunder13`, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$Intubated, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
 
@@ -121,7 +126,7 @@ bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
     `Sev fac inj` + 
     `HR>120` + `SBP<90` + `Pel Unstab` + 
     `RR>30` + `SaO2<90` + 
-    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+    `Resp distr` + Flail + `GCSunder13` + Agitated + 
     Seizure + `Sig Inj ≥2` , 
     family = "binomial", data = traumata)
 bulkmodel
@@ -138,7 +143,7 @@ bulkmodelcomplete <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
     `Sev fac inj` + 
     `HR>120` + `SBP<90` + `Pel Unstab` + 
     `RR>30` + `SaO2<90` + 
-    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+    `Resp distr` + Flail + `GCSunder13` + Agitated + 
     Seizure + `Sig Inj ≥2` , 
                   family = "binomial", data = traumacompletecrit)
 lrtest(wholemodelcomplete, bulkmodelcomplete)
@@ -161,7 +166,7 @@ bulkmodelminimised <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     `Fall >3m` + `Air Comp` +
                     `HR>120` + `SBP<90` +
                     `RR>30` + `SaO2<90` + 
-                    `Resp distr` + Flail + `GCS ≤13` + Agitated + 
+                    `Resp distr` + Flail + `GCSunder13` + Agitated + 
                     Seizure, 
                   family = "binomial", data = traumata)
 bulkmodelminimised
