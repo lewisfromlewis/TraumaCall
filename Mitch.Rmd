@@ -84,7 +84,7 @@ sparsity
 TCClist <- as.data.frame(traumata[,c(8,9, 22:30, 32, 33, 35:37, 39:62)])
 wholemodel <- glm(formula = `Major Trauma`=='yes' ~ .,
                   family = "binomial", data = TCClist)
-# I can't bring myself to delete this after typing the fucker in: wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + `MVA ejection` + `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCSunder13` + Agitated + Seizure + `Sig Inj ≥2` , family = "binomial", data = traumata)
+# I can't bring myself to delete this after typing the fucker in: wholemodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + `MVA ejection` + `MVA entrapment` + `MVA fatality at scene` + `Ped vs car` + `Pen neck` + `Pen torso` + `Crush torso` + `Burns >15%` + `Near Drown` + `Fall >3m` + `Air Comp` + Intubated + `Sev fac inj` + `HR>120` + `SBP<90` + `Pel Unstab` + `RR>30` + `SaO2<90` + `Resp distr` + Flail + `GCSunder14` + Agitated + Seizure + `Sig Inj ≥2` , family = "binomial", data = traumata)
 wholemodel
 ```
 Some model diagnostic, as follow, show this is a slightly flaky model.  Have I missed any of the trauma call criteria?  There are a lot even just in this list.  Drop1 reanalyses the model after dropping each one in order. Analysis of variance is the general term for analysing the contribution of each predictor to the total variability in the response.
@@ -107,7 +107,7 @@ lrtest(wholemodelcomplete, inversemodelcomplete)
 
 mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$Flail, traumata$`SaO2<90`)
-mantelhaen.test(traumata$`Major Trauma`, traumata$`GCSunder13`, traumata$`SaO2<90`)
+mantelhaen.test(traumata$`Major Trauma`, traumata$`GCSunder14`, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$Intubated, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
 
@@ -126,7 +126,7 @@ bulkmodel <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
     `Sev fac inj` + 
     `HR>120` + `SBP<90` + `Pel Unstab` + 
     `RR>30` + `SaO2<90` + 
-    `Resp distr` + Flail + `GCSunder13` + Agitated + 
+    `Resp distr` + Flail + `GCSunder14` + Agitated + 
     Seizure + `Sig Inj ≥2` , 
     family = "binomial", data = traumata)
 bulkmodel
@@ -143,7 +143,7 @@ bulkmodelcomplete <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
     `Sev fac inj` + 
     `HR>120` + `SBP<90` + `Pel Unstab` + 
     `RR>30` + `SaO2<90` + 
-    `Resp distr` + Flail + `GCSunder13` + Agitated + 
+    `Resp distr` + Flail + `GCSunder14` + Agitated + 
     Seizure + `Sig Inj ≥2` , 
                   family = "binomial", data = traumacompletecrit)
 lrtest(wholemodelcomplete, bulkmodelcomplete)
@@ -157,7 +157,7 @@ Thirdly there are some obviously contributory ones that are excluded from the mo
 
 ```{r}
 ## Remove those with VIF>2:  `Sig Inj ≥2` + `Pel Unstab` + `Sev fac inj` +  Intubated + `Ped vs car`
-bulkmodelminimised <- glm(formula = `Major Trauma`=='yes' ~ `multi?` + 
+bulkmodelminimised <- glm(formula =`Major Trauma`=='yes' ~ `multi?` + 
                     `MVA ejection` + `MVA entrapment` + 
                     `MVA fatality at scene` + 
                     `Pen neck` + 
@@ -166,12 +166,11 @@ bulkmodelminimised <- glm(formula = `Major Trauma`=='yes' ~ `multi?` +
                     `Fall >3m` + `Air Comp` +
                     `HR>120` + `SBP<90` +
                     `RR>30` + `SaO2<90` + 
-                    `Resp distr` + Flail + `GCSunder13` + Agitated + 
+                    `Resp distr` + Flail + `GCSunder14` + Agitated + 
                     Seizure, 
-                  family = "binomial", data = traumata)
+                  family = "binomial", data = traumacompletecrit)
 bulkmodelminimised
 anova(bulkmodelminimised, test="Chisq")
-lrtest(bulkmodel, bulkmodelminimised)
 lrtest(wholemodel, bulkmodelminimised)
 vif(bulkmodelminimised)
 ```
