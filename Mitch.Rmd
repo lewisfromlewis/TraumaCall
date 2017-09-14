@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message=FALSE)
 ```
 
 ***Trauma Call in Darwin***
+
 *Team Activation Criteria as a predictor of severe trauma; an analysis of the sensitivity and specificity of Royal Darwin Hospital's Trauma Team Callout Criteria.*
 
 **Background**
@@ -34,11 +35,11 @@ library(lmtest)
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
 traumata <- read_csv("traumata.csv")
 ```
-***Methods***
+## Methods
 **Population**
 A list of all patients presenting to RDH ED in the calendar year of 2015 formed the sample frame.  By linkage with the Trauma Registry, ICU Registry, administrative data on mortality and Operating Theatre records we identified 428 patients who had activated a Trauma Call, out of 1712 trauma patients presenting to the Emergency Department and screened using the TTCC.  A further 29 patients were confirmed as Severe Trauma but did not meet the TTCC, of whom 14 also did not meet the second tier criteria (CONSORT table). One decision we faced in this evaluation was the choice of the denominator population.  The diagnostic contingency table (table) will generate higher values for negative predictive value and specificity as the proportion of patients screened in addition to those with severe trauma.
 
-***Results***
+## Results
 **Population**
 The severity of the ICU cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score is given below.  The various risk functions give varying risks of death as summarised below, and the standardised mortality ratio across the year is from 0.42 to 0.53 (0.53 using APACHEIII).
 
@@ -106,8 +107,8 @@ wholemodelcomplete <- glm(formula = `Major Trauma`=='yes' ~ .,
 inversemodelcomplete <- update(wholemodelcomplete, drop.terms(wholemodelcomplete$terms, c(3, 10, 12, 13, 18, 19, 21, 22, 25)))
 lrtest(wholemodelcomplete, inversemodelcomplete)
 
-mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
-mantelhaen.test(traumata$`Major Trauma`, traumata$Flail, traumata$`SaO2<90`)
+mantelhaen.test(traumata$`multi?`, traumata$`SaO2<90`, traumata$`Major Trauma`)
+mantelhaen.test(traumata$Flail, traumata$`SaO2<90`, traumata$`Major Trauma`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$`GCSunder14`, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$Intubated, traumata$`SaO2<90`)
 mantelhaen.test(traumata$`Major Trauma`, traumata$`multi?`, traumata$`SaO2<90`)
@@ -178,7 +179,7 @@ vif(bulkmodelminimised)
 Now with the minimised model a couple of expected things happen: the log likelihood is lower by 22.  This is a big difference.  So the p value is 4x10^-8.  Fair enough, the more elaborate model predicts outcomes more closely. But the Variance Inflation Factor has gone up only very slightly for all the remaining factors because the absolute difference between a likelihood of e^(-184) and a likelihood of e^(-162) is not very much, and there are fewer places for unmeasured variance to hide.  These are good things for a model.
 ```{r}
 #Close off data manipulations and save current databases
-write_csv(traumata, paste("traumata", "Sys.Date()",".csv"))
+write_csv(traumata, paste("traumata", Sys.Date(),".csv", sep = ""))
 write_csv(traumacompletecrit, "traumacompletecriteria.csv")
 write_csv(Backgroundrate, "Backgroundrate.csv")
 ```
