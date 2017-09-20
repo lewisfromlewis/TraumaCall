@@ -33,6 +33,8 @@ library(car)
 library(lmtest)
 ## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
+
+## The following lines ensure that the predictor criteria are recorded as class = logical in the dataset.
 traumata <- read.csv("traumata.csv", stringsAsFactors = F) %>%
   select(1:80)
 traumata[traumata=="no"] <- FALSE
@@ -104,15 +106,21 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
 ## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean OR are produced.
+grouped1data <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
+```
+```{r}
+# This is a doozy.  The correlation matrix of each predictor with each other predictor
+apply(traumata[,lesssubjectivedata], 2, cor, traumata[,lesssubjectivedata], use = "pair")
 
 ```
+
 ## Linear regression models ##
 These are the models that are generated from the data above.
 ```{r}
 ## Using bestdata
 maximalmodel <- glm(formula = Major_Trauma ~ .,
                   family = "binomial", data = traumata[, bestdata])
-maximalmodel
+mmsummary <- summary(maximalmodel)
 drop1(maximalmodel, test="LR")
 Anova(maximalmodel, test="F")
 vif(maximalmodel)
@@ -121,9 +129,13 @@ vif(maximalmodel)
 lesssubjectivemodel <- glm(formula = Major_Trauma ~ .,
                            family = "binomial", data = traumata[, lesssubjectivedata])
 #Generate the list of complete cases among the trauma call criteria, redo both models
-traumacompletecrit <- traumata[complete.cases(traumata[,bestdata]),bestdata]
+# traumacompletecrit <- traumata[complete.cases(traumata[,bestdata]),bestdata]
 wholemodelcomplete <- glm(formula = Major_Trauma ~ .,
-                  family = "binomial", data = traumacompletecrit)
+                  family = "binomial",
+                  data = traumata[complete.cases(traumata[,bestdata]),bestdata])
+wmcsummary <- summary(wholemodelcomplete)
+
+
 
 mantelhaen.test(traumata$Multiple_victims, traumata$SaO2_under_90, traumata$Major_Trauma)
 mantelhaen.test(traumata$Flail, traumata$SaO2_under_90, traumata$Major_Trauma)
