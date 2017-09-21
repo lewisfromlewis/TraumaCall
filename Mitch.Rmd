@@ -129,12 +129,23 @@ traumata <- traumata %>%
          CO2_Breathing_criteria = MD_RR_over_30 | MD_SaO2_under_90 | Cyanosis | Resp_distress,
          CO2_Circ_criteria = MD_HR_over_120 | MD_SBP_under_90,
          CO2_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Sens_Loss)
+#This is the third collapse.  All possible indicators go into CO3; then The Final Collapse is based on bestdata again, simply collapsed and called The Omega.
+traumata <- traumata %>% 
+  mutate(CO3_mechanism = Ped_v_car | Bicycle_v_car | Blast_Injury | MVAejection |
+           MVAentrapment | Near_Drown | Fall_morethan_3m | Multiple_victims |
+           MVAfatality_at_scene | Airway_burns,
+         CO3_injury = Amputated_Limb | Multiple_fractures | Burns_over_15percent |
+           Pen_head | Pen_neck | Pen_torso | Crush_head | Crush_neck | Crush_torso |
+           Pel_Unstab | Facial_injury | Intubated,
+         CO3_physiology = CPR | Flail | Airway_compromise | MD_RR_over_30 |
+           MD_SaO2_under_90 | Cyanosis | Resp_distress | MD_RR_under_8 | CR_over_2s |
+           MD_HR_under_50 | MD_HR_over_120 | MD_SBP_under_90 |
+           MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
 
 ```
 ```{r}
 # This is a doozy.  The correlation matrix of each predictor with each other predictor
 predictor_correlations <- apply(traumata[,lesssubjectivedata], 2, cor, traumata[,lesssubjectivedata], use = "pair")
-collapsed_correlations <- apply(traumata[,81:107], 2, cor, traumata[,81:107], use = "pair")
 
 mantelhaen.test(traumata$Multiple_victims, traumata$SaO2_under_90, traumata$Major_Trauma)
 mantelhaen.test(traumata$Flail, traumata$SaO2_under_90, traumata$Major_Trauma)
@@ -182,10 +193,10 @@ collapsedmodel2 <- glm(formula = Major_Trauma ~ Ped_v_car +
                       family = "binomial", data = traumata)
 cm2summary <- summary(collapsedmodel2)
 
+collapsedmodel3 <- glm(formula = Major_Trauma ~ CO3_mechanism + CO3_injury + CO3_physiology,
+                      family = "binomial", data = traumata)
+cm3summary <- summary(collapsedmodel3)
 # The above models were about the prediction of "Major Trauma".  To round off, a couple of models about prediction of ISS >15.
-ISSmodel <- glm(formula = traumata$ISS_over_15 ~ names(traumata)[c(9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50, 51, 56, 58, 59:61, 63:66, 68, 69)],
-                family = "binomial", data = traumata)
-ISSbdsummary <- summary(ISSmodel)
 
 collapsedISSmodel2 <- glm(formula = ISS_over_15 ~ Ped_v_car +
                         CO2_Scene_Complications + CO2_Scene_Epidemiology + 
