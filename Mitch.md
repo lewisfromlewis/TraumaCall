@@ -22,6 +22,8 @@ library(car)
 library(lmtest)
 ## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
 ## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
+
+## The following lines ensure that the predictor criteria are recorded as class = logical in the dataset.
 traumata <- read.csv("traumata.csv", stringsAsFactors = F) %>%
   select(1:80)
 traumata[traumata=="no"] <- FALSE
@@ -30,7 +32,10 @@ traumata[traumata=="yes"] <- TRUE
 traumata[traumata=="Yes"] <- TRUE
 write_csv(traumata, "traumata2.csv")
 traumata <- read_csv("traumata2.csv")
+file.remove("traumata2.csv")
 ```
+
+    ## [1] TRUE
 
 Methods
 -------
@@ -209,8 +214,102 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 ## The most "subjective" criteria are judged to be "significant injury to >2 body areas (69: Significant_multiple_injury)", "respiratory distress (60: Resp_distress)" and "severe facial injury (41: Facial_injury)" and were removed from bestdata for the "less subjective" subset of columns
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
-## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean OR are produced.
+## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean "OR" are produced then added to the end of the traumata dataset.  This is the first collapse and so is Collapse 1 or CO1
+traumata <- traumata %>%
+  mutate(CO1_Unequal_Mass = Ped_v_car | Bicycle_v_car,
+         CO1_Military = Burns_over_15percent | Blast_Injury,
+         CO1_Scene_Complications = CPR | Amputated_Limb | MVAejection | MVAentrapment | Multiple_fractures,
+         CO1_Scene_Epidemiology = Near_Drown| Drowning | Fall_morethan_3m | Multiple_victims | MVAfatality_at_scene,
+         CO1_Penetrating_midline = Pen_head | Pen_neck | Pen_torso,
+         CO1_Crushing_midline = Facial_injury | Crush_head | Crush_neck | Crush_torso | Pel_Unstab | Flail,
+         CO1_Airway_criteria = Airway_compromise | Airway_burns,
+         CO1_Breathing_criteria = MD_RR_under_8 | MD_RR_over_30 | MD_SaO2_under_90 | Cyanosis | Resp_distress,
+         CO1_Circ_criteria = CR_over_2s | MD_HR_under_50 | MD_HR_over_120 | MD_SBP_under_90,
+         CO1_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
 ```
+
+``` r
+# This is a doozy.  The correlation matrix of each predictor with each other predictor
+predictor_correlations <- apply(traumata[,lesssubjectivedata], 2, cor, traumata[,lesssubjectivedata], use = "pair")
+
+mantelhaen.test(traumata$Multiple_victims, traumata$SaO2_under_90, traumata$Major_Trauma)
+```
+
+    ## 
+    ##  Mantel-Haenszel chi-squared test with continuity correction
+    ## 
+    ## data:  traumata$Multiple_victims and traumata$SaO2_under_90 and traumata$Major_Trauma
+    ## Mantel-Haenszel X-squared = 4.1469, df = 1, p-value = 0.04171
+    ## alternative hypothesis: true common odds ratio is not equal to 1
+    ## 95 percent confidence interval:
+    ##   1.240874 10.953922
+    ## sample estimates:
+    ## common odds ratio 
+    ##          3.686793
+
+``` r
+mantelhaen.test(traumata$Flail, traumata$SaO2_under_90, traumata$Major_Trauma)
+```
+
+    ## 
+    ##  Mantel-Haenszel chi-squared test with continuity correction
+    ## 
+    ## data:  traumata$Flail and traumata$SaO2_under_90 and traumata$Major_Trauma
+    ## Mantel-Haenszel X-squared = 0.38032, df = 1, p-value = 0.5374
+    ## alternative hypothesis: true common odds ratio is not equal to 1
+    ## 95 percent confidence interval:
+    ##  NaN NaN
+    ## sample estimates:
+    ## common odds ratio 
+    ##                 0
+
+``` r
+mantelhaen.test(traumata$Major_Trauma, traumata$GCS_under_14, traumata$SaO2_under_90)
+```
+
+    ## 
+    ##  Mantel-Haenszel chi-squared test with continuity correction
+    ## 
+    ## data:  traumata$Major_Trauma and traumata$GCS_under_14 and traumata$SaO2_under_90
+    ## Mantel-Haenszel X-squared = 119.69, df = 1, p-value < 2.2e-16
+    ## alternative hypothesis: true common odds ratio is not equal to 1
+    ## 95 percent confidence interval:
+    ##   7.687249 21.646141
+    ## sample estimates:
+    ## common odds ratio 
+    ##          12.89958
+
+``` r
+mantelhaen.test(traumata$Major_Trauma, traumata$Intubated, traumata$SaO2_under_90)
+```
+
+    ## 
+    ##  Mantel-Haenszel chi-squared test with continuity correction
+    ## 
+    ## data:  traumata$Major_Trauma and traumata$Intubated and traumata$SaO2_under_90
+    ## Mantel-Haenszel X-squared = 119.79, df = 1, p-value < 2.2e-16
+    ## alternative hypothesis: true common odds ratio is not equal to 1
+    ## 95 percent confidence interval:
+    ##  NaN NaN
+    ## sample estimates:
+    ## common odds ratio 
+    ##               Inf
+
+``` r
+mantelhaen.test(traumata$Major_Trauma, traumata$Multiple_victims, traumata$SaO2_under_90)
+```
+
+    ## 
+    ##  Mantel-Haenszel chi-squared test with continuity correction
+    ## 
+    ## data:  traumata$Major_Trauma and traumata$Multiple_victims and traumata$SaO2_under_90
+    ## Mantel-Haenszel X-squared = 0.56569, df = 1, p-value = 0.452
+    ## alternative hypothesis: true common odds ratio is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.3056076 1.5019944
+    ## sample estimates:
+    ## common odds ratio 
+    ##         0.6775108
 
 Linear regression models
 ------------------------
@@ -221,49 +320,7 @@ These are the models that are generated from the data above.
 ## Using bestdata
 maximalmodel <- glm(formula = Major_Trauma ~ .,
                   family = "binomial", data = traumata[, bestdata])
-maximalmodel
-```
-
-    ## 
-    ## Call:  glm(formula = Major_Trauma ~ ., family = "binomial", data = traumata[, 
-    ##     bestdata])
-    ## 
-    ## Coefficients:
-    ##                     (Intercept)             Multiple_victimsTRUE  
-    ##                       -2.504268                        -0.311841  
-    ##                 MVAejectionTRUE                MVAentrapmentTRUE  
-    ##                        1.076359                         0.948157  
-    ##        MVAfatality_at_sceneTRUE                    Ped_v_carTRUE  
-    ##                        0.235356                        -0.261223  
-    ##                    Pen_neckTRUE                    Pen_torsoTRUE  
-    ##                       -0.285019                         0.178092  
-    ##                 Crush_torsoTRUE             Fall_morethan_3mTRUE  
-    ##                       -0.921605                        -0.158251  
-    ##           Airway_compromiseTRUE                    IntubatedTRUE  
-    ##                        0.023389                        28.906143  
-    ##               Facial_injuryTRUE               MD_HR_over_120TRUE  
-    ##                      -11.836371                         0.161931  
-    ##             MD_SBP_under_90TRUE                   Pel_UnstabTRUE  
-    ##                        0.007518                         3.058631  
-    ##          Multiple_fracturesTRUE                MD_RR_over_30TRUE  
-    ##                       -0.785784                         0.647548  
-    ##            MD_SaO2_under_90TRUE                     CyanosisTRUE  
-    ##                        2.754757                        18.231417  
-    ##               Resp_distressTRUE                        FlailTRUE  
-    ##                       -1.242287                        21.653014  
-    ##               MD_GCSunder14TRUE                     AgitatedTRUE  
-    ##                        1.826281                         1.286921  
-    ##               Neuro_DeficitTRUE                      SeizureTRUE  
-    ##                        0.729293                        -0.504217  
-    ##                   Sens_LossTRUE  Significant_multiple_injuryTRUE  
-    ##                        2.555574                        29.413409  
-    ## 
-    ## Degrees of Freedom: 753 Total (i.e. Null);  726 Residual
-    ##   (30 observations deleted due to missingness)
-    ## Null Deviance:       776.8 
-    ## Residual Deviance: 448.9     AIC: 504.9
-
-``` r
+mmsummary <- summary(maximalmodel)
 drop1(maximalmodel, test="LR")
 ```
 
@@ -387,89 +444,27 @@ vif(maximalmodel)
 ## Using lesssubjectivedata
 lesssubjectivemodel <- glm(formula = Major_Trauma ~ .,
                            family = "binomial", data = traumata[, lesssubjectivedata])
+lssummary <- summary(lesssubjectivemodel)
 #Generate the list of complete cases among the trauma call criteria, redo both models
-traumacompletecrit <- traumata[complete.cases(traumata[,bestdata]),bestdata]
+# traumacompletecrit <- traumata[complete.cases(traumata[,bestdata]),bestdata]
 wholemodelcomplete <- glm(formula = Major_Trauma ~ .,
-                  family = "binomial", data = traumacompletecrit)
+                  family = "binomial",
+                  data = traumata[complete.cases(traumata[,bestdata]),bestdata])
+wmcsummary <- summary(wholemodelcomplete)
 
-mantelhaen.test(traumata$Multiple_victims, traumata$SaO2_under_90, traumata$Major_Trauma)
+#Using the collapsed criteria
+collapsedmodel <- glm(formula = Major_Trauma ~ CO1_Unequal_Mass + CO1_Military +
+                        CO1_Scene_Complications + CO1_Scene_Epidemiology + 
+                        CO1_Crushing_midline + CO1_Penetrating_midline + 
+                        CO1_Airway_criteria + CO1_Breathing_criteria + CO1_Circ_criteria +
+                        CO1_Neuro_criteria + Significant_multiple_injury,
+                      family = "binomial", data = traumata)
+cmsummary <- summary(collapsedmodel)
+
+#Altering the collapsed criteria
 ```
 
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Multiple_victims and traumata$SaO2_under_90 and traumata$Major_Trauma
-    ## Mantel-Haenszel X-squared = 4.1469, df = 1, p-value = 0.04171
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##   1.240874 10.953922
-    ## sample estimates:
-    ## common odds ratio 
-    ##          3.686793
-
-``` r
-mantelhaen.test(traumata$Flail, traumata$SaO2_under_90, traumata$Major_Trauma)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Flail and traumata$SaO2_under_90 and traumata$Major_Trauma
-    ## Mantel-Haenszel X-squared = 0.38032, df = 1, p-value = 0.5374
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  NaN NaN
-    ## sample estimates:
-    ## common odds ratio 
-    ##                 0
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$GCS_under_14, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$GCS_under_14 and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 119.69, df = 1, p-value < 2.2e-16
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##   7.687249 21.646141
-    ## sample estimates:
-    ## common odds ratio 
-    ##          12.89958
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$Intubated, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$Intubated and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 119.79, df = 1, p-value < 2.2e-16
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  NaN NaN
-    ## sample estimates:
-    ## common odds ratio 
-    ##               Inf
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$Multiple_victims, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$Multiple_victims and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 0.56569, df = 1, p-value = 0.452
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  0.3056076 1.5019944
-    ## sample estimates:
-    ## common odds ratio 
-    ##         0.6775108
+The collapsed criteria have an unquenchable influence of their most important members as seen in the model containing all criteria. Looks like there's no way to cut it that doesn't retain their dominance. The curious feature is that including CPR in "scene complications" doesn't alter either one's significance or influence.
 
 The next models are tedious and painful but give some idea of the predictive contribution of parameters alone. In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*. That may not be the case elsewhere, of course; but it is the case with the data we have. The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive. Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems, then check the coefficients of inversemodel, in which all of the significant predictors from wholemodel have been removed. Agitation, for example, had OR e^(0.32)=1.38, when it's doing more of the heavy lifting that was previously taken by hypoxia or tachypnoea it carries OR e^(1.87)=6.46.
 
@@ -484,6 +479,5 @@ Now with the minimised model a couple of expected things happen: the log likelih
 ``` r
 #Close off data manipulations and save current databases
 write_csv(traumata, paste("traumata", Sys.Date(),".csv", sep = ""))
-write_csv(traumacompletecrit, "traumacompletecriteria.csv")
 write_csv(Backgroundrate, "Backgroundrate.csv")
 ```
