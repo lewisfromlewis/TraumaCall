@@ -3,58 +3,19 @@ Mitch
 Lewis
 13 July 2017
 
-***Trauma Call in Darwin***
+\*\*\*\*Trauma Call in Darwin\*\*\*\*
 
 *Team Activation Criteria as a predictor of severe trauma; an analysis of the sensitivity and specificity of Royal Darwin Hospital's Trauma Team Callout Criteria.*
 
-**Background** Studies have shown that patients who have suffered severe trauma have improved outcomes when a multidisciplinary team and attendant resources ("Trauma Team") are mobilised from other tasks on patient arrival to the Emergency Department (ED) 1,2. In seeking to maximise the benefit of hospital behaviour at the population level, the benefit to severely injured trauma patients is balanced against the effect of removing resources from other areas. This balance is unlikely to be the same in every trauma centre. For example, in a hospital with a higher proportion of severely injured patients who arrive in the early phase of trauma, plus both a low *rate* and a constant and low illness *severity* of patients presenting with non traumatic illness, the prior probability of severe trauma that is considered by the person performing triage is high, and the impact of Trauma Team callouts on service for other patients is low, easily predicted and easily mitigated. This logic underlies the recommendations of many mature health systems for a single trauma centre covering a primary population of 2.5 million (refs?).
-
-Trauma team composition is not closely specified at a national or international level and therefore differs between institutions. Criteria for trauma team activation also differ mildly between institutions (refs?), as do the characteristics of the patients who arrive at the hospital with trauma and are screened for trauma team activation. The literature also presents a divergent set of clinical and administrative outcomes. The rules by which the Trauma Team is activated have been evaluated by determining their accuracy in the diagnosis of "Severe Trauma" (table / box). Some studies find that mechanism of injury criteria have low accuracy in predicting severe injury 3-5.
-
-Our institution, Royal Darwin Hospital (RDH), is a remote hospital covering a large geographical area with a small population (ref). There is a high incidence of severe trauma but long retrieval times are common \# (ref from Kath's work; if influential we could add a column of "injury time" and do a quick dirty analysis of that) and there is a high population burden of non traumatic illness which is both seasonally varying and unpredictably varying (ref). A dedicated Trauma Service reviews presentations twice daily to identify patients who may have trauma as a reason for admission, maintains a register of current and previous trauma patients and coordinates ongoing care of trauma patients using a nurse led model with close consultant input and 24-hour access to a senior surgical trainee designated as a Trauma Fellow. Trauma patients admitted to ICU are additionally recorded on a binational registry of all ICU patients.
-
-The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) is a list of conditions based on pre hospital mechanism of injury and clinical observations on arrival at hospital. If any one or more of the TTCC are present then a response is activated which is single step and essentially hospital wide (fig1). A second, lower level of response is initiated on meeting less stringent criteria (fig2). Our aim, using standard definitions from the literature, was to evaluate the performance of the TTCC, including estimation of the contribution that individual criteria make to the prediction of Severe Trauma in the unique cohort of patients whom we serve. \# I'm more convinced that the Kohn paper didn't use appropriate statistical methodology. I'll check with even worse regression nerds than I am. The problems are about the probability of measuring one thing if another thing is present, and then constructing a ROC curve as if the number of positive criteria that are needed for an activation can be altered, when they can't.
-
-``` r
-library(tidyverse)
-library(readxl)
-library(car)
-library(lmtest)
-## Next line is run once then replaced with the .csv file in the repo,as the subsequent line: 
-## traumata <- read_xlsx("TraumadataV48.xlsx", sheet = 1, n_max = 784)
-
-## The following lines ensure that the predictor criteria are recorded as class = logical in the dataset.
-traumata <- read.csv("traumata.csv", stringsAsFactors = F) %>%
-  select(1:80)
-traumata[traumata=="no"] <- FALSE
-traumata[traumata=="No"] <- FALSE
-traumata[traumata=="yes"] <- TRUE
-traumata[traumata=="Yes"] <- TRUE
-write_csv(traumata, "traumata2.csv")
-traumata <- read_csv("traumata2.csv")
-file.remove("traumata2.csv")
-```
+**Background** RDH is a unique environment. We aim to describe the association of Trauma Call Criteria with patient centred outcomes in a cohort of patients screened for trauma. We also describe the prevalence of individual criteria in the population of trauma patients, and estimate the predictive ability of individual criteria for patient centred outcomes. We discuss the possible implications of simplifying the criteria as if applied to this cohort.
 
     ## [1] TRUE
 
-Methods
--------
-
-**Population** A list of all patients presenting to RDH ED in the calendar year of 2015 formed the sample frame. By linkage with the Trauma Registry, ICU Registry, administrative data on mortality and Operating Theatre records we identified 428 patients who had activated a Trauma Call, out of 1712 trauma patients presenting to the Emergency Department and screened using the TTCC. A further 29 patients were confirmed as Severe Trauma but did not meet the TTCC, of whom 14 also did not meet the second tier criteria (CONSORT table). One decision we faced in this evaluation was the choice of the denominator population. The diagnostic contingency table (table) will generate higher values for negative predictive value and specificity as the proportion of patients screened in addition to those with severe trauma.
-
-Results
--------
-
-**Population** The severity of the ICU cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score is given below. The various risk functions give varying risks of death as summarised below, and the standardised mortality ratio across the year is from 0.42 to 0.53 (0.53 using APACHEIII).
+    ## 
+    ## Alive  Dead 
+    ##   727    88
 
 ``` r
-## Set the scene.
-## Next line is run once then replaced with the .csv file in the repo
-## Backgroundrate <- read_excel("./Cameron M/DeidentNonop2015.xlsx", sheet = 1)
-Backgroundrate <- read_csv('Backgroundrate.csv')
-deathtable <- table(Backgroundrate$ICUVitalStatus)
-deathrate <- (deathtable[2]/deathtable[1])
-deathpredictions <- Backgroundrate[,c(31, 33, 37)]
 summary(deathpredictions)
 ```
 
@@ -66,13 +27,6 @@ summary(deathpredictions)
     ##  3rd Qu.:0.326364   3rd Qu.:0.48001   3rd Qu.:0.34024  
     ##  Max.   :0.975999   Max.   :0.97702   Max.   :0.98426  
     ##  NA's   :4          NA's   :50        NA's   :4
-
-``` r
-predicteddeaths <- sapply(deathpredictions, sum, na.rm=T)
-deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(deathpredictions)[1]
-SMR <- deathrate/deathprobabilities
-print(SMR)
-```
 
     ##    SAPSIIROD  ApacheIIROD ApacheIIIROD 
     ##    0.5234638    0.4187555    0.5340088
@@ -222,10 +176,33 @@ traumata <- traumata %>%
          CO1_Scene_Epidemiology = Near_Drown| Drowning | Fall_morethan_3m | Multiple_victims | MVAfatality_at_scene,
          CO1_Penetrating_midline = Pen_head | Pen_neck | Pen_torso,
          CO1_Crushing_midline = Facial_injury | Crush_head | Crush_neck | Crush_torso | Pel_Unstab | Flail,
-         CO1_Airway_criteria = Airway_compromise | Airway_burns,
+         CO1_Airway_criteria = Airway_compromise | Airway_burns | Intubated,
          CO1_Breathing_criteria = MD_RR_under_8 | MD_RR_over_30 | MD_SaO2_under_90 | Cyanosis | Resp_distress,
          CO1_Circ_criteria = CR_over_2s | MD_HR_under_50 | MD_HR_over_120 | MD_SBP_under_90,
          CO1_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
+
+# This is the second collapse, CO2 and selects criteria from bestdata before collapse
+traumata <- traumata %>%
+  mutate(CO2_Scene_Complications = MVAejection | MVAentrapment | Multiple_fractures,
+         CO2_Scene_Epidemiology = Fall_morethan_3m | Multiple_victims | MVAfatality_at_scene,
+         CO2_Penetrating_midline = Pen_neck | Pen_torso,
+         CO2_Crushing_midline = Facial_injury | Crush_neck | Crush_torso | Pel_Unstab | Flail,
+         
+         CO2_Breathing_criteria = MD_RR_over_30 | MD_SaO2_under_90 | Cyanosis | Resp_distress,
+         CO2_Circ_criteria = MD_HR_over_120 | MD_SBP_under_90,
+         CO2_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Sens_Loss)
+#This is the third collapse.  All possible indicators go into CO3; then The Final Collapse is based on bestdata again, simply collapsed and called The Omega.
+traumata <- traumata %>% 
+  mutate(CO3_mechanism = Ped_v_car | Bicycle_v_car | Blast_Injury | MVAejection |
+           MVAentrapment | Near_Drown | Fall_morethan_3m | Multiple_victims |
+           MVAfatality_at_scene | Airway_burns,
+         CO3_injury = Amputated_Limb | Multiple_fractures | Burns_over_15percent |
+           Pen_head | Pen_neck | Pen_torso | Crush_head | Crush_neck | Crush_torso |
+           Pel_Unstab | Facial_injury | Intubated,
+         CO3_physiology = CPR | Flail | Airway_compromise | MD_RR_over_30 |
+           MD_SaO2_under_90 | Cyanosis | Resp_distress | MD_RR_under_8 | CR_over_2s |
+           MD_HR_under_50 | MD_HR_over_120 | MD_SBP_under_90 |
+           MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
 ```
 
 ``` r
@@ -452,19 +429,38 @@ wholemodelcomplete <- glm(formula = Major_Trauma ~ .,
                   data = traumata[complete.cases(traumata[,bestdata]),bestdata])
 wmcsummary <- summary(wholemodelcomplete)
 
-#Using the collapsed criteria
-collapsedmodel <- glm(formula = Major_Trauma ~ CO1_Unequal_Mass + CO1_Military +
+#Using the collapsed criteria in models
+collapsedmodel1 <- glm(formula = Major_Trauma ~ CO1_Unequal_Mass + CO1_Military +
                         CO1_Scene_Complications + CO1_Scene_Epidemiology + 
                         CO1_Crushing_midline + CO1_Penetrating_midline + 
                         CO1_Airway_criteria + CO1_Breathing_criteria + CO1_Circ_criteria +
                         CO1_Neuro_criteria + Significant_multiple_injury,
                       family = "binomial", data = traumata)
-cmsummary <- summary(collapsedmodel)
+cm1summary <- summary(collapsedmodel1)
 
-#Altering the collapsed criteria
+collapsedmodel2 <- glm(formula = Major_Trauma ~ Ped_v_car +
+                        CO2_Scene_Complications + CO2_Scene_Epidemiology + 
+                        CO1_Crushing_midline + CO1_Penetrating_midline + 
+                        Intubated + CO1_Breathing_criteria + CO1_Circ_criteria +
+                        CO2_Neuro_criteria + Significant_multiple_injury,
+                      family = "binomial", data = traumata)
+cm2summary <- summary(collapsedmodel2)
+
+collapsedmodel3 <- glm(formula = Major_Trauma ~ CO3_mechanism + CO3_injury + CO3_physiology,
+                      family = "binomial", data = traumata)
+cm3summary <- summary(collapsedmodel3)
+# The above models were about the prediction of "Major Trauma".  To round off, a couple of models about prediction of ISS >15.
+
+collapsedISSmodel2 <- glm(formula = ISS_over_15 ~ Ped_v_car +
+                        CO2_Scene_Complications + CO2_Scene_Epidemiology + 
+                        CO1_Crushing_midline + CO1_Penetrating_midline + 
+                        Intubated + CO1_Breathing_criteria + CO1_Circ_criteria +
+                        CO2_Neuro_criteria + Significant_multiple_injury,
+                      family = "binomial", data = traumata)
+ISS2summary <- summary(collapsedISSmodel2)
 ```
 
-The collapsed criteria have an unquenchable influence of their most important members as seen in the model containing all criteria. Looks like there's no way to cut it that doesn't retain their dominance. The curious feature is that including CPR in "scene complications" doesn't alter either one's significance or influence.
+The collapsed criteria have an unquenchable influence of their most important members as seen in the model containing all criteria. Looks like there's no way to cut it that doesn't retain their dominance. One curious feature is that including CPR in "scene complications" doesn't alter either one's significance or influence. Another curious thing is that Intubated doesn't achieve statistical significance in this model, despite being mathematically coupled with the outcome!! What the hell do you have to do to gerrymander a predictor in this cohort?
 
 The next models are tedious and painful but give some idea of the predictive contribution of parameters alone. In the first, only the commonest items are kept and result in a likelihood little lower than with the verbose model *in this sample*. That may not be the case elsewhere, of course; but it is the case with the data we have. The most important terms in *this* model, with log odds ratios of over 20, are a significant injury to more than one area, having been intubated, having a "flail chest" whatever that's worth and near drowning. In the presence of these, the other odds are less impressive. Look below at bulkminimisedmodel to see how this is perhaps not as trustworthy as it seems, then check the coefficients of inversemodel, in which all of the significant predictors from wholemodel have been removed. Agitation, for example, had OR e^(0.32)=1.38, when it's doing more of the heavy lifting that was previously taken by hypoxia or tachypnoea it carries OR e^(1.87)=6.46.
 

@@ -10,23 +10,17 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message=FALSE)
 ```
 
-***Trauma Call in Darwin***
+****Trauma Call in Darwin****
 
 *Team Activation Criteria as a predictor of severe trauma; an analysis of the sensitivity and specificity of Royal Darwin Hospital's Trauma Team Callout Criteria.*
 
 **Background**
-Studies have shown that patients who have suffered severe trauma have improved outcomes when a multidisciplinary team and attendant resources ("Trauma Team") are mobilised from other tasks on patient arrival to the Emergency Department (ED) 1,2.  In seeking to maximise the benefit of hospital behaviour at the population level, the benefit to severely injured trauma patients is balanced against the effect of removing resources from other areas.  This balance is unlikely to be the same in every trauma centre.  For example, in a hospital with a higher proportion of severely injured patients who arrive in the early phase of trauma, plus both a low *rate* and a constant and low illness *severity* of patients presenting with non traumatic illness, the prior probability of severe trauma that is considered by the person performing triage is high, and the impact of Trauma Team callouts on service for other patients is low, easily predicted and easily mitigated.  This logic underlies the recommendations of many mature health systems for a single trauma centre covering a primary population of 2.5 million (refs?).
+RDH is a unique environment.  We aim to describe the association of Trauma Call Criteria with patient centred outcomes in a cohort of patients screened for trauma.  We also describe the prevalence of individual criteria in the population of trauma patients, and estimate the predictive ability of individual criteria for patient centred outcomes.  We discuss the possible implications of simplifying the criteria as if applied to this cohort.
 
-Trauma team composition is not closely specified at a national or international level and therefore differs between institutions.  Criteria for trauma team activation also differ mildly between institutions (refs?), as do the characteristics of the patients who arrive at the hospital with trauma and are screened for trauma team activation. The literature also presents a divergent set of clinical and administrative outcomes. The rules by which the Trauma Team is activated have been evaluated by determining their accuracy in the diagnosis of "Severe Trauma" (table / box). Some studies find that mechanism of injury criteria have low accuracy in predicting severe injury 3-5.
+```{r, echo=FALSE}
 
-Our institution, Royal Darwin Hospital (RDH), is a remote hospital covering a large geographical area with a small population (ref).  There is a high incidence of severe trauma but long retrieval times are common
-# (ref from Kath's work; if influential we could add a column of "injury time" and do a quick dirty analysis of that)
-and there is a high population burden of non traumatic illness which is both seasonally varying and unpredictably varying (ref).  A dedicated Trauma Service reviews presentations twice daily to identify patients who may have trauma as a reason for admission, maintains a register of current and previous trauma patients and coordinates ongoing care of trauma patients using a nurse led model with close consultant input and 24-hour access to a senior surgical trainee designated as a Trauma Fellow.  Trauma patients admitted to ICU are additionally recorded on a binational registry of all ICU patients. 
-
-The "Trauma Team Callout Criteria" (TTCC) at Royal Darwin Hospital (RDH) is a list of conditions based on pre hospital mechanism of injury and clinical observations on arrival at hospital.  If any one or more of the TTCC are present then a response is activated which is single step and essentially hospital wide (fig1).  A second, lower level of response is initiated on meeting less stringent criteria (fig2).  Our aim, using standard definitions from the literature, was to evaluate the performance of the TTCC, including estimation of the contribution that individual criteria make to the prediction of Severe Trauma in the unique cohort of patients whom we serve.
 # I'm more convinced that the Kohn paper didn't use appropriate statistical methodology.  I'll check with even worse regression nerds than I am.  The problems are about the probability of measuring one thing if another thing is present, and then constructing a ROC curve as if the number of positive criteria that are needed for an activation can be altered, when they can't.
 
-```{r}
 library(tidyverse)
 library(readxl)
 library(car)
@@ -45,20 +39,13 @@ write_csv(traumata, "traumata2.csv")
 traumata <- read_csv("traumata2.csv")
 file.remove("traumata2.csv")
 ```
-## Methods
-**Population**
-A list of all patients presenting to RDH ED in the calendar year of 2015 formed the sample frame.  By linkage with the Trauma Registry, ICU Registry, administrative data on mortality and Operating Theatre records we identified 428 patients who had activated a Trauma Call, out of 1712 trauma patients presenting to the Emergency Department and screened using the TTCC.  A further 29 patients were confirmed as Severe Trauma but did not meet the TTCC, of whom 14 also did not meet the second tier criteria (CONSORT table). One decision we faced in this evaluation was the choice of the denominator population.  The diagnostic contingency table (table) will generate higher values for negative predictive value and specificity as the proportion of patients screened in addition to those with severe trauma.
 
-## Results
-**Population**
-The severity of the ICU cohort for that year is indicated by the median Risk of Death based on the ANZICS APACHEIII score is given below.  The various risk functions give varying risks of death as summarised below, and the standardised mortality ratio across the year is from 0.42 to 0.53 (0.53 using APACHEIII).
-
-```{r}
+```{r, echo = 8}
 ## Set the scene.
 ## Next line is run once then replaced with the .csv file in the repo
 ## Backgroundrate <- read_excel("./Cameron M/DeidentNonop2015.xlsx", sheet = 1)
 Backgroundrate <- read_csv('Backgroundrate.csv')
-deathtable <- table(Backgroundrate$ICUVitalStatus)
+(deathtable <- table(Backgroundrate$ICUVitalStatus))
 deathrate <- (deathtable[2]/deathtable[1])
 deathpredictions <- Backgroundrate[,c(31, 33, 37)]
 summary(deathpredictions)
@@ -67,23 +54,28 @@ deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(deathprediction
 SMR <- deathrate/deathprobabilities
 print(SMR)
 ```
-Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value 2.2E-16).
-```{r}
+Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models.  Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value <2.2E-16).  When using a larger denominator population who may not have been screened for major trauma the odds ratio is 17.4 (p value <2.2E-16).  This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population.  Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
+```{r, echo=c(1,3)}
 table(traumata$Meets_TCC, traumata$Major_Trauma)
-
 TCCpredictsmajor <- glm(traumata$Major_Trauma ~ traumata$Meets_TCC, family="binomial")
+#"Intention to treat" style
+TCCpredictsITT <- glm(c(traumata$Major_Trauma, rep(FALSE, 1551-784)) ~ c(traumata$Meets_TCC, rep(FALSE, 1551-784)), family="binomial")
 anova(TCCpredictsmajor, test="Chisq")
-
+anova(TCCpredictsITT, test = "Chisq")
+# These next steps are to make the environment more efficient
+TCCpredictsmajor <- summary(TCCpredictsmajor)
+TCCpredictsITT <- summary(TCCpredictsITT)
 ```
 
 Trauma call criteria were more often seen in those who died, odds ratio 4.09, p=0.004 by Chi squared.  For information, the background odds of death for those without a trauma call was 0.01 hence odds of death in those with a trauma call were still only 0.05.
 ```{r}
 table(traumata$Meets_TCC, traumata$Hospital_vital_status)
 TCCpredictsdeath <- glm(traumata$Hospital_vital_status=='Dead' ~ traumata$Meets_TCC, family = "binomial")
+
 anova(TCCpredictsdeath, test="Chisq")
 ```
-**Contribution of Criteria**
-Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for Major_Trauma with each of the predictors, "all else being equal".  So the odds ratio is their exponent to the base e.
+
+**Prevalence of criteria in the cohort**
 
 
 ```{r}
@@ -107,7 +99,7 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
 ## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean "OR" are produced then added to the end of the traumata dataset.  This is the first collapse and so is Collapse 1 or CO1
-traumata <- traumata %>%
+traumata1 <- traumata %>%
   mutate(CO1_Unequal_Mass = Ped_v_car | Bicycle_v_car,
          CO1_Military = Burns_over_15percent | Blast_Injury,
          CO1_Scene_Complications = CPR | Amputated_Limb | MVAejection | MVAentrapment | Multiple_fractures,
@@ -120,7 +112,7 @@ traumata <- traumata %>%
          CO1_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
 
 # This is the second collapse, CO2 and selects criteria from bestdata before collapse
-traumata <- traumata %>%
+traumata2 <- traumata %>%
   mutate(CO2_Scene_Complications = MVAejection | MVAentrapment | Multiple_fractures,
          CO2_Scene_Epidemiology = Fall_morethan_3m | Multiple_victims | MVAfatality_at_scene,
          CO2_Penetrating_midline = Pen_neck | Pen_torso,
@@ -130,7 +122,7 @@ traumata <- traumata %>%
          CO2_Circ_criteria = MD_HR_over_120 | MD_SBP_under_90,
          CO2_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Sens_Loss)
 #This is the third collapse.  All possible indicators go into CO3; then The Final Collapse is based on bestdata again, simply collapsed and called The Omega.
-traumata <- traumata %>% 
+traumata3 <- traumata %>% 
   mutate(CO3_mechanism = Ped_v_car | Bicycle_v_car | Blast_Injury | MVAejection |
            MVAentrapment | Near_Drown | Fall_morethan_3m | Multiple_victims |
            MVAfatality_at_scene | Airway_burns,
@@ -154,7 +146,10 @@ mantelhaen.test(traumata$Major_Trauma, traumata$Intubated, traumata$SaO2_under_9
 mantelhaen.test(traumata$Major_Trauma, traumata$Multiple_victims, traumata$SaO2_under_90)
 ```
 
-## Linear regression models ##
+
+**Contribution of Criteria: Linear regression models**
+Examining the informational contribution of trauma call criteria using multivariable logistic regression.  Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5.  Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true.  In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for Major_Trauma with each of the predictors, "all else being equal".  So the odds ratio is their exponent to the base e.
+
 These are the models that are generated from the data above.
 ```{r}
 ## Using bestdata
