@@ -54,7 +54,7 @@ deathprobabilities <- sapply(deathpredictions, sum, na.rm=T)/dim(deathprediction
 SMR <- deathrate/deathprobabilities
 print(SMR)
 ```
-Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models.  Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value <2.2E-16).  When using a larger denominator population who may not have been screened for major trauma the odds ratio is 17.4 (p value <2.2E-16).  This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population.  Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
+Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models.  Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value <2.2E-16).  When using a larger denominator population who had a low prior probability for major trauma the odds ratio is 17.4 (p value <2.2E-16).  This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population.  Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
 ```{r, echo=c(1,3)}
 table(traumata$Meets_TCC, traumata$Major_Trauma)
 TCCpredictsmajor <- glm(traumata$Major_Trauma ~ traumata$Meets_TCC, family="binomial")
@@ -99,7 +99,7 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
 ## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean "OR" are produced then added to the end of the traumata dataset.  This is the first collapse and so is Collapse 1 or CO1
-traumata1 <- traumata %>%
+traumata <- traumata %>%
   mutate(CO1_Unequal_Mass = Ped_v_car | Bicycle_v_car,
          CO1_Military = Burns_over_15percent | Blast_Injury,
          CO1_Scene_Complications = CPR | Amputated_Limb | MVAejection | MVAentrapment | Multiple_fractures,
@@ -112,7 +112,7 @@ traumata1 <- traumata %>%
          CO1_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Motor_Loss | Sens_Loss | Agitated)
 
 # This is the second collapse, CO2 and selects criteria from bestdata before collapse
-traumata2 <- traumata %>%
+traumata <- traumata %>%
   mutate(CO2_Scene_Complications = MVAejection | MVAentrapment | Multiple_fractures,
          CO2_Scene_Epidemiology = Fall_morethan_3m | Multiple_victims | MVAfatality_at_scene,
          CO2_Penetrating_midline = Pen_neck | Pen_torso,
@@ -122,7 +122,7 @@ traumata2 <- traumata %>%
          CO2_Circ_criteria = MD_HR_over_120 | MD_SBP_under_90,
          CO2_Neuro_criteria = MD_GCSunder14 | Neuro_Deficit | Seizure | Sens_Loss)
 #This is the third collapse.  All possible indicators go into CO3; then The Final Collapse is based on bestdata again, simply collapsed and called The Omega.
-traumata3 <- traumata %>% 
+traumata <- traumata %>% 
   mutate(CO3_mechanism = Ped_v_car | Bicycle_v_car | Blast_Injury | MVAejection |
            MVAentrapment | Near_Drown | Fall_morethan_3m | Multiple_victims |
            MVAfatality_at_scene | Airway_burns,
@@ -187,6 +187,13 @@ collapsedmodel2 <- glm(formula = Major_Trauma ~ Ped_v_car +
                         CO2_Neuro_criteria + Significant_multiple_injury,
                       family = "binomial", data = traumata)
 cm2summary <- summary(collapsedmodel2)
+collapsedmodel2b <- glm(formula = Major_Trauma ~ Ped_v_car +
+                        CO2_Scene_Complications + CO2_Scene_Epidemiology + 
+                        CO1_Crushing_midline + CO1_Penetrating_midline + 
+                        (Intubated | Airway_compromise) + CO1_Breathing_criteria + CO1_Circ_criteria +
+                        CO2_Neuro_criteria,
+                      family = "binomial", data = traumata)
+cm2bsummary <- summary(collapsedmodel2b)
 
 collapsedmodel3 <- glm(formula = Major_Trauma ~ CO3_mechanism + CO3_injury + CO3_physiology,
                       family = "binomial", data = traumata)
@@ -214,6 +221,8 @@ Secondly, all else is not equal.  People don't have a middling version of CPR, a
 Thirdly there are some obviously contributory ones that are excluded from the model, such as CPR and capillary refill time.  A further model needs to be built, the "clinical preference model" where we go down the list and get some colleagues to say think are most useful, and which are least useful.  Then we keep the important ones in and drop the rest one by one.
 
 Now with the minimised model a couple of expected things happen: the log likelihood is lower by 22.  This is a big difference.  So the p value is 4x10^-8.  Fair enough, the more elaborate model predicts outcomes more closely. But the Variance Inflation Factor has gone up only very slightly for all the remaining factors because the absolute difference between a likelihood of e^(-184) and a likelihood of e^(-162) is not very much, and there are fewer places for unmeasured variance to hide.  These are good things for a model.
+
+
 ```{r}
 #Close off data manipulations and save current databases
 write_csv(traumata, paste("traumata", Sys.Date(),".csv", sep = ""))

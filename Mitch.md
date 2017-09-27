@@ -31,7 +31,7 @@ summary(deathpredictions)
     ##    SAPSIIROD  ApacheIIROD ApacheIIIROD 
     ##    0.5234638    0.4187555    0.5340088
 
-Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria. This is a very influential odds ratio of 5.20 (p value 2.2E-16).
+Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models. Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria. This is a very influential odds ratio of 5.20 (p value &lt;2.2E-16). When using a larger denominator population who may not have been screened for major trauma the odds ratio is 17.4 (p value &lt;2.2E-16). This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population. Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
 
 ``` r
 table(traumata$Meets_TCC, traumata$Major_Trauma)
@@ -43,8 +43,7 @@ table(traumata$Meets_TCC, traumata$Major_Trauma)
     ##   TRUE    293  135
 
 ``` r
-TCCpredictsmajor <- glm(traumata$Major_Trauma ~ traumata$Meets_TCC, family="binomial")
-anova(TCCpredictsmajor, test="Chisq")
+#"Intention to treat" style
 ```
 
     ## Analysis of Deviance Table
@@ -62,6 +61,24 @@ anova(TCCpredictsmajor, test="Chisq")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model: binomial, link: logit
+    ## 
+    ## Response: c(traumata$Major_Trauma, rep(FALSE, 1551 - 784))
+    ## 
+    ## Terms added sequentially (first to last)
+    ## 
+    ## 
+    ##                                               Df Deviance Resid. Df
+    ## NULL                                                           1550
+    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))  1   244.04      1549
+    ##                                               Resid. Dev  Pr(>Chi)    
+    ## NULL                                             1046.96              
+    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))     802.92 < 2.2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
 Trauma call criteria were more often seen in those who died, odds ratio 4.09, p=0.004 by Chi squared. For information, the background odds of death for those without a trauma call was 0.01 hence odds of death in those with a trauma call were still only 0.05.
 
 ``` r
@@ -75,6 +92,7 @@ table(traumata$Meets_TCC, traumata$Hospital_vital_status)
 
 ``` r
 TCCpredictsdeath <- glm(traumata$Hospital_vital_status=='Dead' ~ traumata$Meets_TCC, family = "binomial")
+
 anova(TCCpredictsdeath, test="Chisq")
 ```
 
@@ -93,7 +111,7 @@ anova(TCCpredictsdeath, test="Chisq")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-**Contribution of Criteria** Examining the informational contribution of trauma call criteria using multivariable logistic regression. Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5. Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true. In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for Major\_Trauma with each of the predictors, "all else being equal". So the odds ratio is their exponent to the base e.
+**Prevalence of criteria in the cohort**
 
 ``` r
 ## Quick glance at the cell size for comparisons, make a table, transpose the rows and columns, read off all where cell counts are 5 or fewer
@@ -288,8 +306,7 @@ mantelhaen.test(traumata$Major_Trauma, traumata$Multiple_victims, traumata$SaO2_
     ## common odds ratio 
     ##         0.6775108
 
-Linear regression models
-------------------------
+**Contribution of Criteria: Linear regression models** Examining the informational contribution of trauma call criteria using multivariable logistic regression. Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5. Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true. In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for Major\_Trauma with each of the predictors, "all else being equal". So the odds ratio is their exponent to the base e.
 
 These are the models that are generated from the data above.
 
