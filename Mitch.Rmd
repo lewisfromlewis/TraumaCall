@@ -104,6 +104,23 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 ## The most "subjective" criteria are judged to be "significant injury to >2 body areas (69: Significant_multiple_injury)", "respiratory distress (60: Resp_distress)" and "severe facial injury (41: Facial_injury)" and were removed from bestdata for the "less subjective" subset of columns
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
+# View missing data with the visdat package.  This is cool
+library(visdat)
+vis_dat(traumata)
+# Produce some dodgy numbers with fewer missing data, using all available categories for the missingness.
+traumata <- mutate(traumata, anypulse = pulse, anyresp = resp2, anyBP = sbp2,
+                   anysats = SpO2_1, anyGCS = GCS__1)
+
+traumata$anypulse[is.na(traumata$anypulse)]<- traumata$Pulse[is.na(traumata$anypulse)]
+# 7 NAs
+traumata$anyresp[is.na(traumata$anyresp)]<- traumata$RR[is.na(traumata$anyresp)]
+#15 NAs
+traumata$anyBP[is.na(traumata$anyBP)]<- traumata$SBP[is.na(traumata$anyBP)]
+# 7 NAs
+traumata$anysats[is.na(traumata$anysats)]<- traumata$SaO2[is.na(traumata$anysats)]
+# 10 NAs
+traumata$anyGCS[is.na(traumata$anyGCS)]<- traumata$GCS[is.na(traumata$anyGCS)]
+# 11 NAs
 ## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean "OR" are produced then added to the end of the traumata dataset.  This is the first collapse and so is Collapse 1 or CO1
 traumata <- traumata %>%
   mutate(CO1_Unequal_Mass = Ped_v_car | Bicycle_v_car,
