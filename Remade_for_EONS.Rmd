@@ -1,0 +1,120 @@
+---
+title: "Remade_for_EONS"
+author: "Lewis"
+date: "12 October 2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Preparing for network analysis
+
+Using a network bypasses some of the usual steps in analysis. These steps are not rendered unnecessary: they now need to be anticipated.
+```{r, echo=FALSE}
+# lod packages, set seed
+library(igraph)
+library(tidyverse)
+library(visdat)
+set.seed(1234)
+```
+
+
+
+### Networks
+
+A network is built of *nodes* and *edges*: this code builds a network with ten nodes and some edges, using a semi-random "game".The chances are that f and g below will be different.  The nodes are the things you want to analyse and the edges are some way that they are connected.  This code only produces the edges, by a predetermined rule that is the same for every node.  If run an infinite amount of times it would produce an infinite amount of different graphs, but not with infinite variety: all of them would be constrained by the parameters in the code, which is the probability that an edge will be formed between any two nodes.  This will be useful later.
+
+
+```{r, echo=FALSE}
+f <- erdos.renyi.game(10, .2)
+print(f)
+summary(f)
+
+g <- erdos.renyi.game(10, .2)
+print(g)
+summary(g)
+degree(g)
+```
+
+The network that results can be visualised in lots of different ways.  It looks a little different in each one.  Each is nevertheless still a visualisation of the same network.  There are algorithms for forcing the layout to take a certain form: 
+
+```{r, echo=FALSE}
+plot(g)
+dev.print(svg, "g1.svg")
+plot(g)
+dev.print(svg, "g2.svg")
+plot(g)
+dev.print(svg, "g3.svg")
+
+layout <-layout.fruchterman.reingold(g)
+plot(g, layout = layout)
+plot(g, layout = layout)
+
+## mapping helper from http://michael.hahsler.net/SMU/ScientificCompR/code/map.R
+
+map <- function(x, range = c(0,1), from.range=NA) {
+    if(any(is.na(from.range))) from.range <- range(x, na.rm=TRUE)
+    
+    ## check if all values are the same
+    if(!diff(from.range)) return(
+	    matrix(mean(range), ncol=ncol(x), nrow=nrow(x), 
+		    dimnames = dimnames(x)))
+    
+    ## map to [0,1]
+    x <- (x-from.range[1])
+    x <- x/diff(from.range)
+    ## handle single values
+    if(diff(from.range) == 0) x <- 0 
+    
+    ## map from [0,1] to [range]
+    if (range[1]>range[2]) x <- 1-x
+    x <- x*(abs(diff(range))) + min(range)
+    
+    x[x<min(range) | x>max(range)] <- NA
+    
+    x
+}
+
+plot(g, layout=layout, vertex.size=map(degree(g),c(1,20)))
+
+edge.disjoint.paths(g, 1, 2)
+betweenness(g)
+edge.betweenness(g)
+plot(g, layout=layout,
+  vertex.size=map(betweenness(g),c(1,15)),
+  edge.width=map(edge.betweenness(g), c(1,10)))
+diameter(g)
+get.diameter(g)
+independence.number(g)
+col <- rep("blue",length(V(g)))
+col[maximal.independent.vertex.sets(g)[[1]]] <- "red"
+plot(g, layout=layout, vertex.color=col)
+
+cl <- clusters(g)
+cl
+plot(g, layout=layout, vertex.color=cl$membership+1L)
+dg <- decompose.graph(g)
+length(dg)
+plot(dg[[1]])
+plot(dg[[2]])
+
+max_flow(g, 1, 2)
+graph.mincut(dg[[1]], value.only=FALSE)
+col <- rep("blue", length(V(dg[[1]])))
+col[graph.mincut(dg[[1]], value.only=FALSE)[["partition2"]]] <- "red"
+plot(dg[[1]], vertex.color=col)
+```
+
+### Missingness
+
+Missing data can cause the analysis not to run.  This is not such a problem, because it is detected.  A bigger problem is when an analysis runs but not as expected.  The inference that is made on the basis of the analysis, which is the point of the whole exercise, is then untrustworthy.  It may be wrong or right, but it's untrustworthy.
+
+```{r, echo = FALSE}
+traumata <- read_csv("traumata2017-10-11.csv")
+traumata$Narrative <- NULL; traumata$Victim_details <- NULL; traumata$Pulse <- NULL;
+traumata$GCS <- NULL; traumata$RR <- NULL; traumata$SBP <- NULL; traumata$SaO2 <- NULL
+write_csv(traumata, "traumaready.csv")
+vis_dat(traumata)
+```
