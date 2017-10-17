@@ -117,4 +117,12 @@ traumata$Narrative <- NULL; traumata$Victim_details <- NULL; traumata$Pulse <- N
 traumata$GCS <- NULL; traumata$RR <- NULL; traumata$SBP <- NULL; traumata$SaO2 <- NULL
 write_csv(traumata, "traumaready.csv")
 vis_dat(traumata)
+traumatanums <- traumata %>% 
+  select(ProjectID:Major_Trauma, Meets_TCC:ED_intubation, ISS, anypulse:anyGCS,
+         Multiple_victims:Fall_morethan_3m, Airway_compromise:Airway_burns,
+         Pel_Unstab:Amputated_Limb, Cyanosis:Flail, Agitated:Significant_multiple_injury)
+#Looks like simple uncorrelation:
+traumagraph <- graph_from_data_frame(traumatanums)
+plot(traumagraph)
+write_csv(traumatanums, "traumaready.csv")
 ```

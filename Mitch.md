@@ -34,17 +34,17 @@ summary(deathpredictions)
 Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models. Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria. This is a very influential odds ratio of 5.20 (p value &lt;2.2E-16). When using a larger denominator population who had a low prior probability for major trauma the odds ratio is 17.4 (p value &lt;2.2E-16). This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population. Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
 
 ``` r
-table(traumata$Meets_TCC, traumata$Major_Trauma)
+# check data integrity
+summary(complete.cases(traumata[,bestdata]))
 ```
+
+    ##    Mode   FALSE    TRUE 
+    ## logical      30     754
 
     ##        
     ##         FALSE TRUE
-    ##   FALSE   257   24
-    ##   TRUE    238  108
-
-``` r
-#"Intention to treat" style
-```
+    ##   FALSE   327   29
+    ##   TRUE    293  135
 
     ## Analysis of Deviance Table
     ## 
@@ -56,8 +56,8 @@ table(traumata$Meets_TCC, traumata$Major_Trauma)
     ## 
     ## 
     ##                    Df Deviance Resid. Df Resid. Dev  Pr(>Chi)    
-    ## NULL                                 626     645.38              
-    ## traumata$Meets_TCC  1   51.797       625     593.58 6.155e-13 ***
+    ## NULL                                 783     804.19              
+    ## traumata$Meets_TCC  1   69.567       782     734.62 < 2.2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -71,11 +71,11 @@ table(traumata$Meets_TCC, traumata$Major_Trauma)
     ## 
     ## 
     ##                                               Df Deviance Resid. Df
-    ## NULL                                                           1393
-    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))  1   215.05      1392
+    ## NULL                                                           1550
+    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))  1   244.04      1549
     ##                                               Resid. Dev  Pr(>Chi)    
-    ## NULL                                              873.37              
-    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))     658.32 < 2.2e-16 ***
+    ## NULL                                             1046.96              
+    ## c(traumata$Meets_TCC, rep(FALSE, 1551 - 784))     802.92 < 2.2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -87,8 +87,8 @@ table(traumata$Meets_TCC, traumata$Hospital_vital_status)
 
     ##        
     ##         Alive Dead
-    ##   FALSE   279    2
-    ##   TRUE    329   17
+    ##   FALSE   352    4
+    ##   TRUE    409   19
 
 ``` r
 TCCpredictsdeath <- glm(traumata$Hospital_vital_status=='Dead' ~ traumata$Meets_TCC, family = "binomial")
@@ -105,9 +105,9 @@ anova(TCCpredictsdeath, test="Chisq")
     ## Terms added sequentially (first to last)
     ## 
     ## 
-    ##                    Df Deviance Resid. Df Resid. Dev Pr(>Chi)    
-    ## NULL                                 626     170.29             
-    ## traumata$Meets_TCC  1   10.919       625     159.37 0.000952 ***
+    ##                    Df Deviance Resid. Df Resid. Dev Pr(>Chi)   
+    ## NULL                                 783     207.65            
+    ## traumata$Meets_TCC  1   8.2829       782     199.37 0.004002 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -123,55 +123,55 @@ cellcounts
 ```
 
     ##                             [,1] [,2]
-    ## Multiple_victims             568   59
-    ## CPR                          624    3
-    ## MVAejection                  592   35
-    ## MVAentrapment                611   16
-    ## MVAfatality_at_scene         614   13
-    ## Bicycle_v_car                625    2
-    ## Ped_v_car                    602   25
-    ## Pen_head                     624    3
-    ## Pen_neck                     614   13
-    ## Pen_torso                    577   50
-    ## Crush_head                   625    2
-    ## Crush_neck                   627  627
-    ## Crush_torso                  619    8
-    ## Burns_over_15percent         623    4
-    ## Drowning                     627  627
-    ## Near_Drown                   624    3
-    ## Blast_Injury                 626    1
-    ## Fall_morethan_3m             609   18
-    ## Airway_compromise            603   22
-    ## Intubated                    583   43
-    ## Facial_injury                619    7
-    ## Airway_burns                 625    1
-    ## HR_under_50                  611    2
-    ## MD_HR_under_50               617    2
-    ## HR_over_120                  556   59
-    ## MD_HR_over_120               562   59
-    ## SBP_under_90                 563   30
-    ## MD_SBP_under_90              592   30
-    ## CR_over_2s                   624    1
-    ## Pel_Unstab                   619    7
-    ## Multiple_fractures           612   14
-    ## Amputated_Limb               625    1
-    ## RR_under_8                   564    1
-    ## MD_RR_under_8                613    1
-    ## RR_over_30                   530   37
-    ## MD_RR_over_30                578   37
-    ## SaO2_under_90                503   23
-    ## MD_SaO2_under_90             595   23
-    ## Cyanosis                     622    3
-    ## Resp_distress                618    7
-    ## Flail                        621    5
-    ## GCS_under_14                 493   98
-    ## MD_GCSunder14                521   98
-    ## Agitated                     610   16
-    ## Neuro_Deficit                623    3
-    ## Seizure                      618    8
-    ## Motor_Loss                   624    2
-    ## Sens_Loss                    623    3
-    ## Significant_multiple_injury  603   23
+    ## Multiple_victims             714   70
+    ## CPR                          781    3
+    ## MVAejection                  744   40
+    ## MVAentrapment                759   25
+    ## MVAfatality_at_scene         768   16
+    ## Bicycle_v_car                781    3
+    ## Ped_v_car                    755   29
+    ## Pen_head                     781    3
+    ## Pen_neck                     769   15
+    ## Pen_torso                    720   64
+    ## Crush_head                   782    2
+    ## Crush_neck                   784  784
+    ## Crush_torso                  776    8
+    ## Burns_over_15percent         779    5
+    ## Drowning                     784  784
+    ## Near_Drown                   780    4
+    ## Blast_Injury                 783    1
+    ## Fall_morethan_3m             758   26
+    ## Airway_compromise            753   29
+    ## Intubated                    733   50
+    ## Facial_injury                774    9
+    ## Airway_burns                 782    1
+    ## HR_under_50                  761    4
+    ## MD_HR_under_50               771    4
+    ## HR_over_120                  689   77
+    ## MD_HR_over_120               700   77
+    ## SBP_under_90                 708   37
+    ## MD_SBP_under_90              740   37
+    ## CR_over_2s                   780    2
+    ## Pel_Unstab                   772   11
+    ## Multiple_fractures           766   17
+    ## Amputated_Limb               781    1
+    ## RR_under_8                   701    1
+    ## MD_RR_under_8                766    1
+    ## RR_over_30                   662   43
+    ## MD_RR_over_30                726   43
+    ## SaO2_under_90                632   29
+    ## MD_SaO2_under_90             745   29
+    ## Cyanosis                     779    3
+    ## Resp_distress                774    8
+    ## Flail                        776    7
+    ## GCS_under_14                 616  123
+    ## MD_GCSunder14                651  123
+    ## Agitated                     762   21
+    ## Neuro_Deficit                777    6
+    ## Seizure                      772   11
+    ## Motor_Loss                   779    4
+    ## Sens_Loss                    777    6
+    ## Significant_multiple_injury  751   32
 
 ``` r
 ## Subset of all columns with non-empty cells
@@ -186,6 +186,28 @@ bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50
 ## The most "subjective" criteria are judged to be "significant injury to >2 body areas (69: Significant_multiple_injury)", "respiratory distress (60: Resp_distress)" and "severe facial injury (41: Facial_injury)" and were removed from bestdata for the "less subjective" subset of columns
 lesssubjectivedata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:40, 46, 48, 50, 51, 56, 58, 59, 61, 63:66, 68)]
 
+# View missing data with the visdat package.  This is cool
+library(visdat)
+vis_dat(traumata)
+```
+
+![](Mitch_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+``` r
+# Produce some dodgy numbers with fewer missing data, using all available categories for the missingness.
+traumata <- mutate(traumata, anypulse = pulse, anyresp = resp2, anyBP = sbp2,
+                   anysats = SpO2_1, anyGCS = GCS__1)
+
+traumata$anypulse[is.na(traumata$anypulse)]<- traumata$Pulse[is.na(traumata$anypulse)]
+# 7 NAs
+traumata$anyresp[is.na(traumata$anyresp)]<- traumata$RR[is.na(traumata$anyresp)]
+#15 NAs
+traumata$anyBP[is.na(traumata$anyBP)]<- traumata$SBP[is.na(traumata$anyBP)]
+# 7 NAs
+traumata$anysats[is.na(traumata$anysats)]<- traumata$SaO2[is.na(traumata$anysats)]
+# 10 NAs
+traumata$anyGCS[is.na(traumata$anyGCS)]<- traumata$GCS[is.na(traumata$anyGCS)]
+# 11 NAs
 ## Data with close similarity by MeSH heading are grouped, and new predictors using Boolean "OR" are produced then added to the end of the traumata dataset.  This is the first collapse and so is Collapse 1 or CO1
 traumata <- traumata %>%
   mutate(CO1_Unequal_Mass = Ped_v_car | Bicycle_v_car,
@@ -229,86 +251,7 @@ traumata <- traumata %>%
 # The correlation matrix of each predictor with each other predictor
 predictor_correlations <- apply(traumata[,lesssubjectivedata], 2, cor, traumata[,lesssubjectivedata], use = "pair")
 correlationsmax <- apply(traumata[,allbutempty], 2, cor, traumata[,allbutempty], use = "pair")
-
-
-mantelhaen.test(traumata$Multiple_victims, traumata$SaO2_under_90, traumata$Major_Trauma)
 ```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Multiple_victims and traumata$SaO2_under_90 and traumata$Major_Trauma
-    ## Mantel-Haenszel X-squared = 0.49633, df = 1, p-value = 0.4811
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  0.5598649 8.9143050
-    ## sample estimates:
-    ## common odds ratio 
-    ##          2.234011
-
-``` r
-mantelhaen.test(traumata$Flail, traumata$SaO2_under_90, traumata$Major_Trauma)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Flail and traumata$SaO2_under_90 and traumata$Major_Trauma
-    ## Mantel-Haenszel X-squared = 0.044864, df = 1, p-value = 0.8323
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  NaN NaN
-    ## sample estimates:
-    ## common odds ratio 
-    ##                 0
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$GCS_under_14, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$GCS_under_14 and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 109.94, df = 1, p-value < 2.2e-16
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##   8.757023 28.726477
-    ## sample estimates:
-    ## common odds ratio 
-    ##          15.86059
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$Intubated, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$Intubated and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 99.327, df = 1, p-value < 2.2e-16
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  NaN NaN
-    ## sample estimates:
-    ## common odds ratio 
-    ##               Inf
-
-``` r
-mantelhaen.test(traumata$Major_Trauma, traumata$Multiple_victims, traumata$SaO2_under_90)
-```
-
-    ## 
-    ##  Mantel-Haenszel chi-squared test with continuity correction
-    ## 
-    ## data:  traumata$Major_Trauma and traumata$Multiple_victims and traumata$SaO2_under_90
-    ## Mantel-Haenszel X-squared = 1.8887, df = 1, p-value = 0.1694
-    ## alternative hypothesis: true common odds ratio is not equal to 1
-    ## 95 percent confidence interval:
-    ##  0.1792556 1.2003012
-    ## sample estimates:
-    ## common odds ratio 
-    ##         0.4638542
 
 **Contribution of Criteria: Linear regression models** Examining the informational contribution of trauma call criteria using multivariable logistic regression. Each component of the trauma call criteria is added sequentially to a multivariable model unless the data are sparse for one of the predictors: because the chi squared test is to be used this means any comparison with a cell count less than 5. Logistic regression is one of the family of general linear models, which use the value of parameters to predict a response, assuming that the relationship across the values of the parameter holds true. In each linear model there's a link function, so for a simple linear model it's the identity function, for logistic regression it's the logit function; and there's an assumption about an error structure for the data, in this case I've chosen binomial. So the model produces a set of coefficients, which in this case are the **log odds ratio** for Major\_Trauma with each of the predictors, "all else being equal". So the odds ratio is their exponent to the base e.
 
@@ -387,35 +330,35 @@ drop1(maximalmodel, test="LR")
     ##     Multiple_fractures + MD_RR_over_30 + MD_SaO2_under_90 + Cyanosis + 
     ##     Resp_distress + Flail + MD_GCSunder14 + Agitated + Neuro_Deficit + 
     ##     Seizure + Sens_Loss + Significant_multiple_injury
-    ##                             Df Deviance    AIC     LRT  Pr(>Chi)    
-    ## <none>                           352.79 408.79                      
-    ## Multiple_victims             1   353.97 407.97  1.1787  0.277627    
-    ## MVAejection                  1   355.68 409.68  2.8912  0.089064 .  
-    ## MVAentrapment                1   352.82 406.82  0.0256  0.872796    
-    ## MVAfatality_at_scene         1   352.87 406.87  0.0839  0.772015    
-    ## Ped_v_car                    1   353.38 407.38  0.5929  0.441281    
-    ## Pen_neck                     1   352.85 406.85  0.0595  0.807257    
-    ## Pen_torso                    1   353.01 407.01  0.2178  0.640722    
-    ## Crush_torso                  1   352.91 406.91  0.1153  0.734147    
-    ## Fall_morethan_3m             1   352.84 406.84  0.0483  0.825993    
-    ## Airway_compromise            1   354.35 408.35  1.5557  0.212296    
-    ## Intubated                    1   380.84 434.84 28.0514 1.181e-07 ***
-    ## Facial_injury                1   352.95 406.95  0.1601  0.689099    
-    ## MD_HR_over_120               1   353.39 407.39  0.6027  0.437564    
-    ## MD_SBP_under_90              1   352.80 406.80  0.0098  0.921326    
-    ## Pel_Unstab                   1   355.67 409.67  2.8782  0.089785 .  
-    ## Multiple_fractures           1   353.74 407.74  0.9499  0.329750    
-    ## MD_RR_over_30                1   354.35 408.35  1.5641  0.211060    
-    ## MD_SaO2_under_90             1   360.00 414.00  7.2054  0.007269 ** 
-    ## Cyanosis                     1   353.38 407.38  0.5929  0.441313    
-    ## Resp_distress                1   352.79 406.79  0.0000  0.997610    
-    ## Flail                        1   368.85 422.85 16.0638 6.124e-05 ***
-    ## MD_GCSunder14                1   383.90 437.90 31.1097 2.438e-08 ***
-    ## Agitated                     1   359.82 413.82  7.0317  0.008008 ** 
-    ## Neuro_Deficit                1   352.79 406.79  0.0021  0.963338    
-    ## Seizure                      1   353.01 407.01  0.2161  0.642031    
-    ## Sens_Loss                    1   354.06 408.06  1.2655  0.260609    
-    ## Significant_multiple_injury  1   377.60 431.60 24.8102 6.326e-07 ***
+    ##                             Df Deviance    AIC    LRT  Pr(>Chi)    
+    ## <none>                           448.85 504.85                     
+    ## Multiple_victims             1   449.28 503.28  0.427 0.5134632    
+    ## MVAejection                  1   453.02 507.02  4.171 0.0411200 *  
+    ## MVAentrapment                1   450.72 504.72  1.864 0.1721466    
+    ## MVAfatality_at_scene         1   448.92 502.92  0.069 0.7934966    
+    ## Ped_v_car                    1   448.93 502.93  0.081 0.7765579    
+    ## Pen_neck                     1   448.93 502.93  0.079 0.7790671    
+    ## Pen_torso                    1   449.00 503.00  0.145 0.7031986    
+    ## Crush_torso                  1   449.29 503.29  0.436 0.5089062    
+    ## Fall_morethan_3m             1   448.89 502.89  0.043 0.8348964    
+    ## Airway_compromise            1   448.85 502.85  0.000 0.9849140    
+    ## Intubated                    1   480.23 534.23 31.375 2.127e-08 ***
+    ## Facial_injury                1   449.01 503.01  0.157 0.6919862    
+    ## MD_HR_over_120               1   448.99 502.99  0.136 0.7120036    
+    ## MD_SBP_under_90              1   448.85 502.85  0.000 0.9923162    
+    ## Pel_Unstab                   1   454.37 508.37  5.522 0.0187801 *  
+    ## Multiple_fractures           1   449.59 503.59  0.737 0.3905868    
+    ## MD_RR_over_30                1   450.08 504.08  1.225 0.2683393    
+    ## MD_SaO2_under_90             1   461.65 515.65 12.804 0.0003459 ***
+    ## Cyanosis                     1   450.07 504.07  1.217 0.2699200    
+    ## Resp_distress                1   449.42 503.42  0.570 0.4501008    
+    ## Flail                        1   472.17 526.17 23.320 1.372e-06 ***
+    ## MD_GCSunder14                1   479.05 533.05 30.203 3.891e-08 ***
+    ## Agitated                     1   452.15 506.15  3.298 0.0693482 .  
+    ## Neuro_Deficit                1   449.08 503.08  0.228 0.6332740    
+    ## Seizure                      1   449.16 503.16  0.308 0.5786420    
+    ## Sens_Loss                    1   451.26 505.26  2.410 0.1205697    
+    ## Significant_multiple_injury  1   481.41 535.41 32.555 1.159e-08 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -429,34 +372,34 @@ Anova(maximalmodel, test="F")
     ## Error estimate based on Pearson residuals 
     ## 
     ##                                 SS  Df       F    Pr(>F)    
-    ## Multiple_victims              1.18   1  1.3083  0.253182    
-    ## MVAejection                   2.89   1  3.2091  0.073753 .  
-    ## MVAentrapment                 0.03   1  0.0285  0.866107    
-    ## MVAfatality_at_scene          0.08   1  0.0932  0.760283    
-    ## Ped_v_car                     0.59   1  0.6582  0.417548    
-    ## Pen_neck                      0.06   1  0.0661  0.797247    
-    ## Pen_torso                     0.22   1  0.2417  0.623134    
-    ## Crush_torso                   0.12   1  0.1280  0.720624    
-    ## Fall_morethan_3m              0.05   1  0.0536  0.816919    
-    ## Airway_compromise             1.56   1  1.7268  0.189348    
-    ## Intubated                    28.05   1 31.1359 3.706e-08 ***
-    ## Facial_injury                 0.16   1  0.1777  0.673546    
-    ## MD_HR_over_120                0.60   1  0.6689  0.413763    
-    ## MD_SBP_under_90               0.01   1  0.0108  0.917164    
-    ## Pel_Unstab                    2.88   1  3.1947  0.074402 .  
-    ## Multiple_fractures            0.95   1  1.0543  0.304943    
-    ## MD_RR_over_30                 1.56   1  1.7361  0.188153    
-    ## MD_SaO2_under_90              7.21   1  7.9977  0.004847 ** 
-    ## Cyanosis                      0.59   1  0.6581  0.417581    
-    ## Resp_distress                 0.00   1  0.0000  0.997483    
-    ## Flail                        16.06   1 17.8302 2.807e-05 ***
-    ## MD_GCSunder14                31.11   1 34.5306 7.104e-09 ***
-    ## Agitated                      7.03   1  7.8049  0.005384 ** 
-    ## Neuro_Deficit                 0.00   1  0.0023  0.961393    
-    ## Seizure                       0.22   1  0.2399  0.624495    
-    ## Sens_Loss                     1.27   1  1.4047  0.236431    
-    ## Significant_multiple_injury  24.81   1 27.5383 2.168e-07 ***
-    ## Residuals                   518.94 576                      
+    ## Multiple_victims              0.43   1  0.4677 0.4942853    
+    ## MVAejection                   4.17   1  4.5682 0.0329046 *  
+    ## MVAentrapment                 1.86   1  2.0416 0.1534756    
+    ## MVAfatality_at_scene          0.07   1  0.0750 0.7842002    
+    ## Ped_v_car                     0.08   1  0.0882 0.7665433    
+    ## Pen_neck                      0.08   1  0.0862 0.7691582    
+    ## Pen_torso                     0.15   1  0.1590 0.6902085    
+    ## Crush_torso                   0.44   1  0.4779 0.4896160    
+    ## Fall_morethan_3m              0.04   1  0.0476 0.8273951    
+    ## Airway_compromise             0.00   1  0.0004 0.9842177    
+    ## Intubated                    31.38   1 34.3623 6.943e-09 ***
+    ## Facial_injury                 0.16   1  0.1719 0.6785637    
+    ## MD_HR_over_120                0.14   1  0.1493 0.6993575    
+    ## MD_SBP_under_90               0.00   1  0.0001 0.9919615    
+    ## Pel_Unstab                    5.52   1  6.0476 0.0141574 *  
+    ## Multiple_fractures            0.74   1  0.8073 0.3692196    
+    ## MD_RR_over_30                 1.23   1  1.3419 0.2470860    
+    ## MD_SaO2_under_90             12.80   1 14.0226 0.0001949 ***
+    ## Cyanosis                      1.22   1  1.3330 0.2486458    
+    ## Resp_distress                 0.57   1  0.6247 0.4295626    
+    ## Flail                        23.32   1 25.5402 5.489e-07 ***
+    ## MD_GCSunder14                30.20   1 33.0784 1.304e-08 ***
+    ## Agitated                      3.30   1  3.6124 0.0577457 .  
+    ## Neuro_Deficit                 0.23   1  0.2493 0.6177050    
+    ## Seizure                       0.31   1  0.3378 0.5612819    
+    ## Sens_Loss                     2.41   1  2.6393 0.1046805    
+    ## Significant_multiple_injury  32.55   1 35.6541 3.687e-09 ***
+    ## Residuals                   662.89 726                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -465,33 +408,33 @@ vif(maximalmodel)
 ```
 
     ##            Multiple_victims                 MVAejection 
-    ##                    1.213226                    1.138909 
+    ##                    1.156208                    1.112399 
     ##               MVAentrapment        MVAfatality_at_scene 
-    ##                    1.565731                    1.182273 
+    ##                    1.263645                    1.133627 
     ##                   Ped_v_car                    Pen_neck 
-    ##                    1.295561                    1.027412 
+    ##                    1.286698                    1.022398 
     ##                   Pen_torso                 Crush_torso 
-    ##                    1.125489                    1.552020 
+    ##                    1.121157                    1.295626 
     ##            Fall_morethan_3m           Airway_compromise 
-    ##                    1.049209                    2.876094 
+    ##                    1.063420                    1.061102 
     ##                   Intubated               Facial_injury 
-    ##                    3.509619                    2.029130 
+    ##                    1.549347                    2.030081 
     ##              MD_HR_over_120             MD_SBP_under_90 
-    ##                    1.104171                    1.178747 
+    ##                    1.106141                    1.210248 
     ##                  Pel_Unstab          Multiple_fractures 
-    ##                    1.720664                    1.210207 
+    ##                    1.518890                    1.134666 
     ##               MD_RR_over_30            MD_SaO2_under_90 
-    ##                    1.044210                    1.445553 
+    ##                    1.049402                    1.318177 
     ##                    Cyanosis               Resp_distress 
-    ##                    1.000000                    1.852400 
+    ##                    1.000000                    1.513016 
     ##                       Flail               MD_GCSunder14 
-    ##                    1.000000                    1.111961 
+    ##                    1.000000                    1.147364 
     ##                    Agitated               Neuro_Deficit 
-    ##                    1.136306                    1.750567 
+    ##                    1.094014                    2.622279 
     ##                     Seizure                   Sens_Loss 
-    ##                    1.063687                    1.751967 
+    ##                    1.107421                    2.634202 
     ## Significant_multiple_injury 
-    ##                    1.395604
+    ##                    1.480736
 
 ``` r
 Anova(lesssubjectivemodel, test="F")
@@ -503,31 +446,31 @@ Anova(lesssubjectivemodel, test="F")
     ## Error estimate based on Pearson residuals 
     ## 
     ##                          SS  Df       F    Pr(>F)    
-    ## Multiple_victims       1.22   1  1.3134  0.252255    
-    ## MVAejection            3.14   1  3.3752  0.066698 .  
-    ## MVAentrapment          0.01   1  0.0125  0.910875    
-    ## MVAfatality_at_scene   0.97   1  1.0477  0.306472    
-    ## Ped_v_car              0.49   1  0.5217  0.470401    
-    ## Pen_neck               0.12   1  0.1277  0.720985    
-    ## Pen_torso              0.20   1  0.2182  0.640565    
-    ## Crush_torso            0.17   1  0.1794  0.672024    
-    ## Fall_morethan_3m       0.08   1  0.0827  0.773755    
-    ## Airway_compromise      1.51   1  1.6199  0.203616    
-    ## Intubated             29.96   1 32.2233 2.175e-08 ***
-    ## MD_HR_over_120         2.10   1  2.2632  0.133022    
-    ## MD_SBP_under_90        1.75   1  1.8876  0.170005    
-    ## Pel_Unstab             5.29   1  5.6884  0.017398 *  
-    ## Multiple_fractures     0.54   1  0.5860  0.444295    
-    ## MD_RR_over_30          2.41   1  2.5942  0.107803    
-    ## MD_SaO2_under_90       9.03   1  9.7118  0.001922 ** 
-    ## Cyanosis               0.77   1  0.8232  0.364630    
-    ## Flail                 16.69   1 17.9549 2.632e-05 ***
-    ## MD_GCSunder14         29.04   1 31.2321 3.529e-08 ***
-    ## Agitated               6.94   1  7.4631  0.006490 ** 
-    ## Neuro_Deficit          0.02   1  0.0187  0.891309    
-    ## Seizure                0.15   1  0.1634  0.686201    
-    ## Sens_Loss              0.96   1  1.0369  0.308976    
-    ## Residuals            538.28 579                      
+    ## Multiple_victims       0.07   1  0.0763 0.7824342    
+    ## MVAejection            4.21   1  4.5025 0.0341828 *  
+    ## MVAentrapment          2.17   1  2.3185 0.1282742    
+    ## MVAfatality_at_scene   0.38   1  0.4078 0.5232764    
+    ## Ped_v_car              0.09   1  0.0975 0.7549135    
+    ## Pen_neck               0.14   1  0.1504 0.6982975    
+    ## Pen_torso              0.08   1  0.0898 0.7645063    
+    ## Crush_torso            0.03   1  0.0293 0.8642274    
+    ## Fall_morethan_3m       0.04   1  0.0457 0.8308138    
+    ## Airway_compromise      0.00   1  0.0050 0.9438948    
+    ## Intubated             35.62   1 38.0673 1.133e-09 ***
+    ## MD_HR_over_120         1.39   1  1.4805 0.2240967    
+    ## MD_SBP_under_90        1.85   1  1.9739 0.1604570    
+    ## Pel_Unstab             7.84   1  8.3788 0.0039096 ** 
+    ## Multiple_fractures     0.15   1  0.1555 0.6934346    
+    ## MD_RR_over_30          2.14   1  2.2861 0.1309695    
+    ## MD_SaO2_under_90      13.59   1 14.5190 0.0001505 ***
+    ## Cyanosis               0.75   1  0.7971 0.3722685    
+    ## Flail                 22.33   1 23.8599 1.274e-06 ***
+    ## MD_GCSunder14         26.83   1 28.6700 1.151e-07 ***
+    ## Agitated               3.47   1  3.7054 0.0546246 .  
+    ## Neuro_Deficit          0.26   1  0.2803 0.5966785    
+    ## Seizure                0.17   1  0.1778 0.6733546    
+    ## Sens_Loss              2.30   1  2.4567 0.1174614    
+    ## Residuals            682.20 729                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -541,34 +484,34 @@ Anova(wholemodelcomplete, test="F")
     ## Error estimate based on Pearson residuals 
     ## 
     ##                                 SS  Df       F    Pr(>F)    
-    ## Multiple_victims              1.18   1  1.3083  0.253182    
-    ## MVAejection                   2.89   1  3.2091  0.073753 .  
-    ## MVAentrapment                 0.03   1  0.0285  0.866107    
-    ## MVAfatality_at_scene          0.08   1  0.0932  0.760283    
-    ## Ped_v_car                     0.59   1  0.6582  0.417548    
-    ## Pen_neck                      0.06   1  0.0661  0.797247    
-    ## Pen_torso                     0.22   1  0.2417  0.623134    
-    ## Crush_torso                   0.12   1  0.1280  0.720624    
-    ## Fall_morethan_3m              0.05   1  0.0536  0.816919    
-    ## Airway_compromise             1.56   1  1.7268  0.189348    
-    ## Intubated                    28.05   1 31.1359 3.706e-08 ***
-    ## Facial_injury                 0.16   1  0.1777  0.673546    
-    ## MD_HR_over_120                0.60   1  0.6689  0.413763    
-    ## MD_SBP_under_90               0.01   1  0.0108  0.917164    
-    ## Pel_Unstab                    2.88   1  3.1947  0.074402 .  
-    ## Multiple_fractures            0.95   1  1.0543  0.304943    
-    ## MD_RR_over_30                 1.56   1  1.7361  0.188153    
-    ## MD_SaO2_under_90              7.21   1  7.9977  0.004847 ** 
-    ## Cyanosis                      0.59   1  0.6581  0.417581    
-    ## Resp_distress                 0.00   1  0.0000  0.997483    
-    ## Flail                        16.06   1 17.8302 2.807e-05 ***
-    ## MD_GCSunder14                31.11   1 34.5306 7.104e-09 ***
-    ## Agitated                      7.03   1  7.8049  0.005384 ** 
-    ## Neuro_Deficit                 0.00   1  0.0023  0.961393    
-    ## Seizure                       0.22   1  0.2399  0.624495    
-    ## Sens_Loss                     1.27   1  1.4047  0.236431    
-    ## Significant_multiple_injury  24.81   1 27.5383 2.168e-07 ***
-    ## Residuals                   518.94 576                      
+    ## Multiple_victims              0.43   1  0.4677 0.4942853    
+    ## MVAejection                   4.17   1  4.5682 0.0329046 *  
+    ## MVAentrapment                 1.86   1  2.0416 0.1534756    
+    ## MVAfatality_at_scene          0.07   1  0.0750 0.7842002    
+    ## Ped_v_car                     0.08   1  0.0882 0.7665433    
+    ## Pen_neck                      0.08   1  0.0862 0.7691582    
+    ## Pen_torso                     0.15   1  0.1590 0.6902085    
+    ## Crush_torso                   0.44   1  0.4779 0.4896160    
+    ## Fall_morethan_3m              0.04   1  0.0476 0.8273951    
+    ## Airway_compromise             0.00   1  0.0004 0.9842177    
+    ## Intubated                    31.38   1 34.3623 6.943e-09 ***
+    ## Facial_injury                 0.16   1  0.1719 0.6785637    
+    ## MD_HR_over_120                0.14   1  0.1493 0.6993575    
+    ## MD_SBP_under_90               0.00   1  0.0001 0.9919615    
+    ## Pel_Unstab                    5.52   1  6.0476 0.0141574 *  
+    ## Multiple_fractures            0.74   1  0.8073 0.3692196    
+    ## MD_RR_over_30                 1.23   1  1.3419 0.2470860    
+    ## MD_SaO2_under_90             12.80   1 14.0226 0.0001949 ***
+    ## Cyanosis                      1.22   1  1.3330 0.2486458    
+    ## Resp_distress                 0.57   1  0.6247 0.4295626    
+    ## Flail                        23.32   1 25.5402 5.489e-07 ***
+    ## MD_GCSunder14                30.20   1 33.0784 1.304e-08 ***
+    ## Agitated                      3.30   1  3.6124 0.0577457 .  
+    ## Neuro_Deficit                 0.23   1  0.2493 0.6177050    
+    ## Seizure                       0.31   1  0.3378 0.5612819    
+    ## Sens_Loss                     2.41   1  2.6393 0.1046805    
+    ## Significant_multiple_injury  32.55   1 35.6541 3.687e-09 ***
+    ## Residuals                   662.89 726                      
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -577,54 +520,54 @@ vif(lesssubjectivemodel)
 ```
 
     ##     Multiple_victims          MVAejection        MVAentrapment 
-    ##             1.220513             1.156406             1.122563 
+    ##             1.168696             1.121193             1.068865 
     ## MVAfatality_at_scene            Ped_v_car             Pen_neck 
-    ##             1.136808             1.576191             1.027549 
+    ##             1.066623             1.507726             1.021758 
     ##            Pen_torso          Crush_torso     Fall_morethan_3m 
-    ##             1.115034             1.211722             1.043547 
+    ##             1.119171             1.111964             1.053933 
     ##    Airway_compromise            Intubated       MD_HR_over_120 
-    ##             2.449765             2.449765             1.119164 
+    ##             1.063090             1.000001             1.116925 
     ##      MD_SBP_under_90           Pel_Unstab   Multiple_fractures 
-    ##             1.218358             1.686580             1.058865 
+    ##             1.263117             1.605771             1.071650 
     ##        MD_RR_over_30     MD_SaO2_under_90             Cyanosis 
-    ##             1.065123             1.142197             1.000000 
+    ##             1.085034             1.067017             1.000000 
     ##                Flail        MD_GCSunder14             Agitated 
-    ##             1.000000             1.110817             1.074786 
+    ##             1.000000             1.139439             1.076153 
     ##        Neuro_Deficit              Seizure            Sens_Loss 
-    ##             1.832112             1.052514             1.831227
+    ##             2.853083             1.100763             2.864622
 
 ``` r
 vif(wholemodelcomplete)
 ```
 
     ##            Multiple_victims                 MVAejection 
-    ##                    1.213226                    1.138909 
+    ##                    1.156208                    1.112399 
     ##               MVAentrapment        MVAfatality_at_scene 
-    ##                    1.565731                    1.182273 
+    ##                    1.263645                    1.133627 
     ##                   Ped_v_car                    Pen_neck 
-    ##                    1.295561                    1.027412 
+    ##                    1.286698                    1.022398 
     ##                   Pen_torso                 Crush_torso 
-    ##                    1.125489                    1.552020 
+    ##                    1.121157                    1.295626 
     ##            Fall_morethan_3m           Airway_compromise 
-    ##                    1.049209                    2.876094 
+    ##                    1.063420                    1.061102 
     ##                   Intubated               Facial_injury 
-    ##                    3.509619                    2.029130 
+    ##                    1.549347                    2.030081 
     ##              MD_HR_over_120             MD_SBP_under_90 
-    ##                    1.104171                    1.178747 
+    ##                    1.106141                    1.210248 
     ##                  Pel_Unstab          Multiple_fractures 
-    ##                    1.720664                    1.210207 
+    ##                    1.518890                    1.134666 
     ##               MD_RR_over_30            MD_SaO2_under_90 
-    ##                    1.044210                    1.445553 
+    ##                    1.049402                    1.318177 
     ##                    Cyanosis               Resp_distress 
-    ##                    1.000000                    1.852400 
+    ##                    1.000000                    1.513016 
     ##                       Flail               MD_GCSunder14 
-    ##                    1.000000                    1.111961 
+    ##                    1.000000                    1.147364 
     ##                    Agitated               Neuro_Deficit 
-    ##                    1.136306                    1.750567 
+    ##                    1.094014                    2.622279 
     ##                     Seizure                   Sens_Loss 
-    ##                    1.063687                    1.751967 
+    ##                    1.107421                    2.634202 
     ## Significant_multiple_injury 
-    ##                    1.395604
+    ##                    1.480736
 
 ``` r
 # The collapsed models give the results that they report
@@ -632,15 +575,15 @@ vif(collapsedmodel1)
 ```
 
     ##            CO1_Unequal_Mass                CO1_Military 
-    ##                    1.049375                    1.026239 
+    ##                    1.069720                    1.022672 
     ##     CO1_Scene_Complications      CO1_Scene_Epidemiology 
-    ##                    1.063707                    1.065615 
+    ##                    1.047352                    1.053404 
     ##        CO1_Crushing_midline     CO1_Penetrating_midline 
-    ##                    1.042578                    1.102106 
+    ##                    1.056190                    1.098515 
     ##         CO1_Airway_criteria      CO1_Breathing_criteria 
-    ##                    1.086899                    1.035632 
+    ##                    1.077771                    1.029258 
     ##           CO1_Circ_criteria          CO1_Neuro_criteria 
-    ##                    1.065500                    1.116627 
+    ##                    1.068304                    1.112237 
     ## Significant_multiple_injury 
     ##                    1.000000
 
@@ -649,36 +592,36 @@ vif(collapsedmodel2)
 ```
 
     ##                   Ped_v_car     CO2_Scene_Complications 
-    ##                    1.034282                    1.078086 
+    ##                    1.069699                    1.049159 
     ##      CO2_Scene_Epidemiology        CO1_Crushing_midline 
-    ##                    1.072120                    1.040982 
+    ##                    1.055400                    1.061383 
     ##     CO1_Penetrating_midline                   Intubated 
-    ##                    1.089983                    1.000000 
+    ##                    1.087670                    1.000000 
     ##      CO1_Breathing_criteria           CO1_Circ_criteria 
-    ##                    1.030388                    1.064444 
+    ##                    1.026992                    1.072860 
     ##          CO2_Neuro_criteria Significant_multiple_injury 
-    ##                    1.047088                    1.000000
+    ##                    1.051148                    1.000000
 
 ``` r
 vif(collapsedmodel3)
 ```
 
     ##  CO3_mechanism     CO3_injury CO3_physiology 
-    ##       1.012054       1.012969       1.006666
+    ##       1.014269       1.024379       1.010376
 
 ``` r
 # The model with the lowest Akaike Information Criterion AIC is the preferred model
 c(maximalmodel$aic, wholemodelcomplete$aic, lesssubjectivemodel$aic, collapsedmodel1$aic, collapsedmodel2$aic, collapsedmodel3$aic)
 ```
 
-    ## [1] 408.7904 408.7904 430.2283 412.0195 402.3764 473.6269
+    ## [1] 504.8513 504.8513 534.4381 508.7457 498.1443 592.4036
 
 ``` r
 # The model with the lowest BIC is preferred
 c(BIC(maximalmodel), BIC(wholemodelcomplete), BIC(lesssubjectivemodel), BIC(collapsedmodel1), BIC(collapsedmodel2), BIC(collapsedmodel3))
 ```
 
-    ## [1] 532.0905 532.0905 540.3177 464.8624 450.8157 491.2610
+    ## [1] 634.3623 634.3623 650.0730 564.2504 549.0236 610.9211
 
 ``` r
 #Collapsedmodel2 is preferred by BIC and AIC

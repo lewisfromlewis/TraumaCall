@@ -63,6 +63,13 @@ print(SMR)
 ```
 Of patients admitted to ICU that year, 88/815 or 10.8% of patients died, which is well below benchmark mortality as shown by the SMR using various models.  Major Trauma occurred in 31.5% of those with trauma call criteria, but still seen in 8.1% of those without trauma call criteria.  This is a very influential odds ratio of 5.20 (p value <2.2E-16).  When using a larger denominator population who had a low prior probability for major trauma the odds ratio is 17.4 (p value <2.2E-16).  This is a slightly trivial result as the odds for severe trauma in patients without trauma is zero, hence the odds ratio for any trauma criterion is infinite when applied to an unselected population.  Henceforth we use the cohort of 784 patients who either had severe trauma or were likely to be screened for severe trauma.
 ```{r, echo=c(1,3)}
+# check data integrity
+bestdata <- names(traumata)[c(8, 9, 22:24, 26, 28, 29, 32, 37, 39:41, 46, 48, 50, 51, 56, 58, 59:61, 63:66, 68, 69)]
+summary(complete.cases(traumata[,bestdata]))
+traumatacomplete <- traumata[complete.cases(traumata[,bestdata]),bestdata]
+#export for EONS analysis
+write_tsv(traumatacomplete, path = "C:/Users/lewis/Documents/The Information/Research and papers/EONS sabbatical/EONS/traumatacomplete.expression")
+
 table(traumata$Meets_TCC, traumata$Major_Trauma)
 TCCpredictsmajor <- glm(traumata$Major_Trauma ~ traumata$Meets_TCC, family="binomial")
 #"Intention to treat" style
