@@ -124,5 +124,5 @@ traumatanums <- traumata %>%
 #Looks like simple uncorrelation:
 traumagraph <- graph_from_data_frame(traumatanums)
 plot(traumagraph)
-write_csv(traumatanums, "traumaready.csv")
+write_csv(traumatanums, "C:/Users/lewis/Documents/CICM/CICM Formal Projects/Cameron M/TraumaCall/traumaready.csv")
 ```
